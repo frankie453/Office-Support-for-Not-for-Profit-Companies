@@ -23,10 +23,10 @@ export function ReportDetail({
   return (
     <Paper style={{ padding: 2 }}>
       <Stack alignItems={"center"} spacing={2}>
-        <Typography fontWeight={"bold"} variant="h2">
+        <Typography fontWeight={"bold"} variant="h3">
           {title}
         </Typography>
-        <Typography variant="h3">Incoming</Typography>
+        <Typography variant="h4">Incoming</Typography>
         <Typography variant="h6">
           {"Total this month: " + report.content.incoming.total}
         </Typography>

@@ -21,6 +21,7 @@ import { reportsExamples } from "../reports_examples";
 import { useState } from "react";
 import { ReportType } from "../types";
 import { Dayjs } from "dayjs";
+import { Link, NavLink } from "react-router";
 
 type ReportFilter = {
   type: ReportType | string;
@@ -38,10 +39,20 @@ export default function ReportsPage() {
     <>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Reports
-          </Typography>
-          <Button color="inherit">Login</Button>
+          <Stack direction={"row"} justifyContent={"space-between"} flex={1}>
+            <Typography
+              color="inherit"
+              component={Link}
+              to={"/"}
+              fontWeight={"normal"}
+              variant="h6"
+              sx={{ flexGrow: 1 }}
+              style={{ textDecoration: "none" }}
+            >
+              Reports
+            </Typography>
+            <Button color="inherit">Login</Button>
+          </Stack>
         </Toolbar>
       </AppBar>
       <Paper style={{ padding: 20 }}>
