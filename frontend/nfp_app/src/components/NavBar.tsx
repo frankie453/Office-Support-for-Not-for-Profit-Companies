@@ -7,18 +7,22 @@ import {
   ListItemIcon,
   Divider,
   Tooltip,
+  Box,
 } from '@mui/material';
 import {
   Home as HomeIcon,
   Download as DownloadIcon,
   CheckBox as CheckBoxIcon,
   CalendarToday as CalendarIcon,
+  Add as AddIcon,
 } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const drawerWidth = 80; // Sidebar width
 
 export default function Navbar() {
+  const navigate = useNavigate();
+
   return (
     <Drawer
       variant="permanent"
@@ -29,10 +33,38 @@ export default function Navbar() {
           width: drawerWidth,
           boxSizing: 'border-box',
           bgcolor: '#f9f5ff', // Sidebar background color
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          py: 2,
         },
       }}
     >
-      <List>
+      {/* Add Button at the top */}
+      <Box sx={{ mb: 2 }}>
+        <Tooltip title="New Form" placement="right">
+          <ListItemButton
+            onClick={() => navigate('/form')}
+            sx={{
+              width: 50,
+              height: 50,
+              borderRadius: 2,
+              justifyContent: 'center',
+              bgcolor: 'primary.light',
+              '&:hover': {
+                bgcolor: 'primary.main',
+              },
+            }}
+          >
+            <AddIcon sx={{ color: 'white' }} />
+          </ListItemButton>
+        </Tooltip>
+      </Box>
+
+      <Divider sx={{ width: '80%', my: 2 }} />
+
+      {/* Navigation Items */}
+      <List sx={{ width: '100%' }}>
         <ListItem disablePadding>
           <Tooltip title="Dashboard" placement="right">
             <ListItemButton
@@ -40,8 +72,8 @@ export default function Navbar() {
               to="/"
               sx={{ justifyContent: 'center' }}
             >
-              <ListItemIcon>
-                <HomeIcon sx={{ color: 'primary.main' }} />
+              <ListItemIcon sx={{ minWidth: 0 }}>
+                <HomeIcon />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -54,8 +86,8 @@ export default function Navbar() {
               to="/reports"
               sx={{ justifyContent: 'center' }}
             >
-              <ListItemIcon>
-                <DownloadIcon sx={{ color: 'primary.main' }} />
+              <ListItemIcon sx={{ minWidth: 0 }}>
+                <DownloadIcon />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -68,8 +100,8 @@ export default function Navbar() {
               to="/tasks"
               sx={{ justifyContent: 'center' }}
             >
-              <ListItemIcon>
-                <CheckBoxIcon sx={{ color: 'primary.main' }} />
+              <ListItemIcon sx={{ minWidth: 0 }}>
+                <CheckBoxIcon />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -82,14 +114,13 @@ export default function Navbar() {
               to="/categories"
               sx={{ justifyContent: 'center' }}
             >
-              <ListItemIcon>
-                <CalendarIcon sx={{ color: 'primary.main' }} />
+              <ListItemIcon sx={{ minWidth: 0 }}>
+                <CalendarIcon />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
         </ListItem>
       </List>
-      <Divider />
     </Drawer>
   );
 }

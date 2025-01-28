@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Paper,
   Avatar,
   List,
   ListItem,
@@ -10,11 +9,20 @@ import {
   ListItemText,
   IconButton,
   Stack,
+  Grid,
 } from '@mui/material';
 import { ArrowForward as ArrowForwardIcon } from '@mui/icons-material';
 import { reportsExamples } from '../reports_examples';
+import { useNavigate } from 'react-router-dom';
+import { ReportGridIcon } from '../components/ReportGridIcon';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+
+  const sortedReports = [...reportsExamples].sort((a, b) => 
+    b.metadata.date.getTime() - a.metadata.date.getTime()
+  );
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" sx={{ mb: 4 }}>
@@ -25,31 +33,17 @@ export default function DashboardPage() {
       <Box sx={{ mb: 4 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="h5">Recent Reports</Typography>
-          <IconButton>
+          <IconButton onClick={() => navigate('/reports')}>
             <ArrowForwardIcon />
           </IconButton>
         </Stack>
-        <Stack direction="row" spacing={2} sx={{ overflowX: 'auto', pb: 2 }}>
-          {reportsExamples.slice(0, 7).map((report, index) => (
-            <Paper
-              key={index}
-              elevation={1}
-              sx={{
-                p: 2,
-                minWidth: 120,
-                textAlign: 'center',
-                borderRadius: '50%',
-                aspectRatio: '1',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Typography>Label</Typography>
-            </Paper>
+        <Grid container spacing={3}>
+          {sortedReports.slice(0, 4).map((report) => (
+            <Grid item xs={12} sm={6} md={3} key={report.metadata.id}>
+              <ReportGridIcon report={report} />
+            </Grid>
           ))}
-        </Stack>
+        </Grid>
       </Box>
 
       {/* Recent Emails Section */}
