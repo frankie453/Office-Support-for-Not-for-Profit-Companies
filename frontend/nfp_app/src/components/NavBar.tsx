@@ -48,10 +48,10 @@ export default function Navbar() {
         </ListItem>
 
         <ListItem disablePadding>
-          <Tooltip title="Downloads" placement="right">
+          <Tooltip title="Reports" placement="right">
             <ListItemButton
               component={Link}
-              to="/downloads"
+              to="/reports"
               sx={{ justifyContent: 'center' }}
             >
               <ListItemIcon>
@@ -76,10 +76,10 @@ export default function Navbar() {
         </ListItem>
 
         <ListItem disablePadding>
-          <Tooltip title="Calendar" placement="right">
+          <Tooltip title="Categories" placement="right">
             <ListItemButton
               component={Link}
-              to="/calendar"
+              to="/categories"
               sx={{ justifyContent: 'center' }}
             >
               <ListItemIcon>
