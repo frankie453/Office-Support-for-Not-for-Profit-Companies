@@ -1,11 +1,11 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import ReportsPage from './pages/Reports';
-import Dashboard from './pages/Dashboard';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from './theme';
-import Categories from './pages/Categories';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router";
+import Layout from "./components/Layout";
+import ReportsPage from "./pages/Reports";
+import Dashboard from "./pages/Dashboard";
+import { ThemeProvider, CssBaseline } from "@mui/material";
+import theme from "./theme";
+import Categories from "./pages/Categories";
 
 function App() {
   return (
@@ -28,4 +28,3 @@ function App() {
 }
 
 export default App;
-
