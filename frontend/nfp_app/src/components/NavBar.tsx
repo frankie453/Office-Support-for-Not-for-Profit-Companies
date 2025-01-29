@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Drawer,
   List,
@@ -8,15 +8,18 @@ import {
   Divider,
   Tooltip,
   Box,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Home as HomeIcon,
   Download as DownloadIcon,
   CheckBox as CheckBoxIcon,
   CalendarToday as CalendarIcon,
   Add as AddIcon,
-} from '@mui/icons-material';
-import { Link, useNavigate } from 'react-router-dom';
+} from "@mui/icons-material";
+import { Link, useNavigate } from "react-router-dom";
+import ArchiveIcon from "@mui/icons-material/Archive";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
 const drawerWidth = 80; // Sidebar width
 
@@ -29,13 +32,13 @@ export default function Navbar() {
       sx={{
         width: drawerWidth,
         flexShrink: 0,
-        '& .MuiDrawer-paper': {
+        "& .MuiDrawer-paper": {
           width: drawerWidth,
-          boxSizing: 'border-box',
-          bgcolor: '#f9f5ff', // Sidebar background color
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          boxSizing: "border-box",
+          bgcolor: "#f9f5ff", // Sidebar background color
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           py: 2,
         },
       }}
@@ -44,36 +47,36 @@ export default function Navbar() {
       <Box sx={{ mb: 2 }}>
         <Tooltip title="New Form" placement="right">
           <ListItemButton
-            onClick={() => navigate('/form')}
+            onClick={() => navigate("/form")}
             sx={{
               width: 50,
               height: 50,
               borderRadius: 2,
-              justifyContent: 'center',
-              bgcolor: 'primary.light',
-              '&:hover': {
-                bgcolor: 'primary.main',
+              justifyContent: "center",
+              bgcolor: "primary.light",
+              "&:hover": {
+                bgcolor: "primary.main",
               },
             }}
           >
-            <AddIcon sx={{ color: 'white' }} />
+            <AddIcon sx={{ color: "white" }} />
           </ListItemButton>
         </Tooltip>
       </Box>
 
-      <Divider sx={{ width: '80%', my: 2 }} />
+      <Divider sx={{ width: "80%", my: 2 }} />
 
       {/* Navigation Items */}
-      <List sx={{ width: '100%' }}>
+      <List sx={{ width: "100%" }}>
         <ListItem disablePadding>
           <Tooltip title="Dashboard" placement="right">
             <ListItemButton
               component={Link}
               to="/"
-              sx={{ justifyContent: 'center' }}
+              sx={{ justifyContent: "center" }}
             >
               <ListItemIcon sx={{ minWidth: 0 }}>
-                <HomeIcon />
+                <HomeIcon sx={{ fontSize: "50px" }} />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -84,10 +87,10 @@ export default function Navbar() {
             <ListItemButton
               component={Link}
               to="/reports"
-              sx={{ justifyContent: 'center' }}
+              sx={{ justifyContent: "center" }}
             >
               <ListItemIcon sx={{ minWidth: 0 }}>
-                <DownloadIcon />
+                <ArchiveIcon sx={{ fontSize: "50px" }} />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -98,10 +101,10 @@ export default function Navbar() {
             <ListItemButton
               component={Link}
               to="/tasks"
-              sx={{ justifyContent: 'center' }}
+              sx={{ justifyContent: "center" }}
             >
               <ListItemIcon sx={{ minWidth: 0 }}>
-                <CheckBoxIcon />
+                <AssignmentIcon sx={{ fontSize: "50px" }} />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>
@@ -112,10 +115,10 @@ export default function Navbar() {
             <ListItemButton
               component={Link}
               to="/categories"
-              sx={{ justifyContent: 'center' }}
+              sx={{ justifyContent: "center" }}
             >
               <ListItemIcon sx={{ minWidth: 0 }}>
-                <CalendarIcon />
+                <AssessmentIcon sx={{ fontSize: "50px" }} />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>

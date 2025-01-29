@@ -1,5 +1,6 @@
 import {
   AppBar,
+  Box,
   Button,
   Divider,
   FormControl,
@@ -36,130 +37,107 @@ export default function ReportsPage() {
     end: null,
   });
   return (
-    <>
-      <AppBar position="static">
-        <Toolbar>
-          <Stack direction={"row"} justifyContent={"space-between"} flex={1}>
-            <Typography
-              color="inherit"
-              component={Link}
-              to={"/"}
-              fontWeight={"normal"}
-              variant="h6"
-              sx={{ flexGrow: 1 }}
-              style={{ textDecoration: "none" }}
-            >
-              Reports
-            </Typography>
-            <Button color="inherit">Login</Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
-      <Paper style={{ padding: 20 }}>
-        <Stack alignItems={"center"} justifyContent={"center"}>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" sx={{ mb: 4 }}>
+        Reports
+      </Typography>
+      <Stack alignItems={"center"} justifyContent={"center"}>
+        <Stack direction={"row"} width={"100%"} justifyContent={"space-around"}>
           <Stack
             direction={"row"}
-            width={"100%"}
+            alignItems={"center"}
             justifyContent={"space-around"}
+            gap={5}
           >
-            <Stack
-              direction={"row"}
-              alignItems={"center"}
-              justifyContent={"space-around"}
-              gap={5}
-            >
-              {/* <TextField fullWidth placeholder={"Search report..."}></TextField> */}
-              <FormControl>
-                <InputLabel id="select-report-type-label">
-                  Report Type
-                </InputLabel>
-                <Select
-                  id="select-report-type"
-                  labelId="select-report-type-label"
-                  label="Report Type"
-                  color="primary"
-                  defaultValue={"All"}
-                  value={reportTypeFilter.type}
-                  onChange={(event) =>
+            {/* <TextField fullWidth placeholder={"Search report..."}></TextField> */}
+            <FormControl>
+              <InputLabel id="select-report-type-label">Report Type</InputLabel>
+              <Select
+                id="select-report-type"
+                labelId="select-report-type-label"
+                label="Report Type"
+                color="primary"
+                defaultValue={"All"}
+                value={reportTypeFilter.type}
+                onChange={(event) =>
+                  setReportTypeFilter({
+                    ...reportTypeFilter,
+                    type: event.target.value,
+                  })
+                }
+              >
+                <MenuItem value={"All"}>All</MenuItem>
+                <MenuItem value={ReportType.EMAILS}>Emails</MenuItem>
+                <MenuItem value={ReportType.CALLS}>Phone Calls</MenuItem>
+                <MenuItem value={ReportType.INPERSON}>In Person</MenuItem>
+              </Select>
+            </FormControl>
+            <Stack direction={"row"} alignItems={"center"} gap={5}>
+              <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <DatePicker
+                  value={reportTypeFilter.start}
+                  onChange={(value) =>
                     setReportTypeFilter({
                       ...reportTypeFilter,
-                      type: event.target.value,
+                      start: value,
                     })
                   }
-                >
-                  <MenuItem value={"All"}>All</MenuItem>
-                  <MenuItem value={ReportType.EMAILS}>Emails</MenuItem>
-                  <MenuItem value={ReportType.CALLS}>Phone Calls</MenuItem>
-                  <MenuItem value={ReportType.INPERSON}>In Person</MenuItem>
-                </Select>
-              </FormControl>
-              <Stack direction={"row"} alignItems={"center"} gap={5}>
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                  <DatePicker
-                    value={reportTypeFilter.start}
-                    onChange={(value) =>
-                      setReportTypeFilter({
-                        ...reportTypeFilter,
-                        start: value,
-                      })
-                    }
-                    label={"From"}
-                    views={["month", "year"]}
-                  />
-                  <Typography variant="h5">-</Typography>
-                  <DatePicker
-                    value={reportTypeFilter.end}
-                    onChange={(value) =>
-                      setReportTypeFilter({
-                        ...reportTypeFilter,
-                        end: value,
-                      })
-                    }
-                    label={"To"}
-                    views={["month", "year"]}
-                  />
-                </LocalizationProvider>
-              </Stack>
+                  label={"From"}
+                  views={["month", "year"]}
+                />
+                <Typography variant="h5">-</Typography>
+                <DatePicker
+                  value={reportTypeFilter.end}
+                  onChange={(value) =>
+                    setReportTypeFilter({
+                      ...reportTypeFilter,
+                      end: value,
+                    })
+                  }
+                  label={"To"}
+                  views={["month", "year"]}
+                />
+              </LocalizationProvider>
             </Stack>
           </Stack>
-
-          <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-          <Grid2
-            container
-            columns={4}
-            spacing={4}
-            // justifyContent="space-evenly"
-            width={"100%"}
-          >
-            {reportsExamples
-              .filter((report) => {
-                if (
-                  reportTypeFilter.type !== "All" &&
-                  reportTypeFilter.type !== report.metadata.type
-                )
-                  return false;
-                else if (
-                  reportTypeFilter.start &&
-                  reportTypeFilter.start.toDate() > report.metadata.date
-                )
-                  return false;
-                else if (
-                  reportTypeFilter.end &&
-                  reportTypeFilter.end.toDate() < report.metadata.date
-                )
-                  return false;
-                else {
-                  return true;
-                }
-              })
-              .map((report) => (
-                <Grid2 size={1}>
-                  <ReportGridIcon report={report} />
-                </Grid2>
-              ))}
-          </Grid2>
         </Stack>
-      </Paper>
-    </>
+
+        <Divider style={{ marginTop: 20, marginBottom: 20 }} />
+        <Grid2
+          container
+          columns={4}
+          spacing={4}
+          // justifyContent="space-evenly"
+          width={"100%"}
+        >
+          {reportsExamples
+            .filter((report) => {
+              if (
+                reportTypeFilter.type !== "All" &&
+                reportTypeFilter.type !== report.metadata.type
+              )
+                return false;
+              else if (
+                reportTypeFilter.start &&
+                reportTypeFilter.start.toDate() > report.metadata.date
+              )
+                return false;
+              else if (
+                reportTypeFilter.end &&
+                reportTypeFilter.end.toDate() < report.metadata.date
+              )
+                return false;
+              else {
+                return true;
+              }
+            })
+            .map((report) => (
+              <Grid2 size={1}>
+                <ReportGridIcon report={report} />
+              </Grid2>
+            ))}
+        </Grid2>
+      </Stack>
+    </Box>
   );
 }
