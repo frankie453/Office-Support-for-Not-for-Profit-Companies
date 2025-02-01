@@ -12,12 +12,16 @@ import {
   Typography,
 } from "@mui/material";
 
-export default function Layout() {
+export default function Layout({
+  handleSession,
+}: {
+  handleSession: (session: string | null) => void;
+}) {
   const drawerWidth = 80; // Match NavBar width
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <Navbar />
+      <Navbar handleSession={handleSession} />
       <Box
         component="main"
         sx={{

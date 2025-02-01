@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router";
 import Layout from "./components/Layout";
 import ReportsPage from "./pages/Reports";
@@ -16,8 +16,29 @@ import theme from "./theme";
 import Categories from "./pages/Categories";
 import TaskPage from "./pages/TaskPage";
 import PhoneCallForm from "./pages/PhoneCallForm";
+import LoginPage from "./pages/LoginPage";
+import axios from "axios";
+import { BASE_URL } from "./constants";
+import { useLocation } from "react-router-dom";
 
 function App() {
+  const [session, setSession] = useState(localStorage.getItem("token"));
+  // Check if token is valid, if not, clear storage on URL change
+  const location = useLocation();
+  useEffect(() => {
+    axios
+      .get(BASE_URL, {
+        headers: {
+          Authorization: "Token " + session,
+        },
+      })
+      .then(() => {})
+      .catch(() => {
+        localStorage.removeItem("expiry");
+        localStorage.removeItem("token");
+        setSession(null);
+      });
+  }, [location]);
   return (
     <>
       {/* <AppBar position="static" style={{ flex: 1 }}>
@@ -39,16 +60,21 @@ function App() {
         </Toolbar>
       </AppBar> */}
       <Routes>
+        {session === null ? (
+          <Route path="*" element={<LoginPage handleSession={setSession} />} />
+        ) : (
+          <Route path="/" element={<Layout handleSession={setSession} />}>
+            <Route index element={<Dashboard />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="reports" element={<ReportsPage />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="tasks" element={<TaskPage />} />
+            <Route path="form" element={<PhoneCallForm />} />
+            <Route path="*" element={<div>Page not found</div>} />
+          </Route>
+        )}
+
         {/* Wrap routes with the Layout */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="reports" element={<ReportsPage />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="tasks" element={<TaskPage />} />
-          <Route path="form" element={<PhoneCallForm />} />
-          <Route path="*" element={<div>Page not found</div>} />
-        </Route>
       </Routes>
     </>
   );

@@ -20,12 +20,37 @@ import { Link, useNavigate } from "react-router-dom";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import AssessmentIcon from "@mui/icons-material/Assessment";
+import LogoutIcon from "@mui/icons-material/Logout";
+import axios from "axios";
+import { BASE_URL } from "../constants";
 
 const drawerWidth = 80; // Sidebar width
 
-export default function Navbar() {
+export default function Navbar({
+  handleSession,
+}: {
+  handleSession: (session: string | null) => void;
+}) {
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    axios
+      .post(BASE_URL + "logout/", null, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Token " + localStorage.getItem("token"),
+        },
+      })
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((e) => console.log(e.message))
+      .finally(() => {
+        localStorage.removeItem("expiry");
+        localStorage.removeItem("token");
+        handleSession(null);
+      });
+  };
   return (
     <Drawer
       variant="permanent"
@@ -119,6 +144,18 @@ export default function Navbar() {
             >
               <ListItemIcon sx={{ minWidth: 0 }}>
                 <AssessmentIcon sx={{ fontSize: "50px" }} />
+              </ListItemIcon>
+            </ListItemButton>
+          </Tooltip>
+        </ListItem>
+        <ListItem disablePadding style={{ top: 50 }}>
+          <Tooltip title="Disconnect" placement="right">
+            <ListItemButton
+              sx={{ justifyContent: "center" }}
+              onClick={handleLogout}
+            >
+              <ListItemIcon sx={{ minWidth: 0 }}>
+                <LogoutIcon sx={{ fontSize: "50px" }} />
               </ListItemIcon>
             </ListItemButton>
           </Tooltip>

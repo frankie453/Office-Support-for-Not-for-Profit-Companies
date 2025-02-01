@@ -17,6 +17,7 @@
     "@mui/x-charts": "^7.24.0",
     "@mui/x-date-pickers": "^7.24.1",
     "@types/react-router-dom": "^5.3.3",
+    "axios": "^1.7.9",
     "dayjs": "^1.11.13",
     "nfp_app": "file:",
     "react": "^18.3.1",
