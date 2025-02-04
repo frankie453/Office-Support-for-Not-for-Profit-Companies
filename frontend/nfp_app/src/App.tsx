@@ -16,6 +16,7 @@ import theme from "./theme";
 import Categories from "./pages/Categories";
 import TaskPage from "./pages/TaskPage";
 import PhoneCallForm from "./pages/PhoneCallForm";
+import InPersonForm from "./pages/InPersonForm";
 
 function App() {
   return (
@@ -46,7 +47,8 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="categories" element={<Categories />} />
           <Route path="tasks" element={<TaskPage />} />
-          <Route path="form" element={<PhoneCallForm />} />
+          <Route path="phonecallform" element={<PhoneCallForm />} />
+          <Route path="inpersonform" element={<InPersonForm />} />
           <Route path="*" element={<div>Page not found</div>} />
         </Route>
       </Routes>

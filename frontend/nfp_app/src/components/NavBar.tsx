@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Drawer,
   List,
@@ -8,6 +8,15 @@ import {
   Divider,
   Tooltip,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogActions,
+  DialogContent,
+  Button,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  Typography
 } from "@mui/material";
 import {
   Home as HomeIcon,
@@ -25,8 +34,29 @@ const drawerWidth = 80; // Sidebar width
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const [openDialog, setOpenDialog] = useState(false);
+  const [formType, setFormType] = useState("");
+
+  const handleOpenDialog = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    setFormType("");
+  }
+  const handleFormSelection = () => {
+    handleCloseDialog();
+    if(formType === "phonecall") {
+      navigate("/phonecallform");
+    }
+    else if (formType === "inperson"){
+      navigate("/inpersonform");
+    }
+  };
 
   return (
+    <>
     <Drawer
       variant="permanent"
       sx={{
@@ -47,7 +77,7 @@ export default function Navbar() {
       <Box sx={{ mb: 2 }}>
         <Tooltip title="New Form" placement="right">
           <ListItemButton
-            onClick={() => navigate("/form")}
+            onClick={handleOpenDialog}
             sx={{
               width: 50,
               height: 50,
@@ -125,5 +155,29 @@ export default function Navbar() {
         </ListItem>
       </List>
     </Drawer>
+    <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <DialogTitle sx={{textAlign: "center", fontWeight: "bold"}} >
+         Form Type
+      </DialogTitle>
+      <DialogContent sx={{ textAlign: "center"}}>
+        <Typography variant="body2" color="textSecondary"> 
+          Choose which form to fill
+        </Typography>
+        <RadioGroup value={formType} onChange={(e) => setFormType(e.target.value)}
+          sx={{display: "flex", alignItems: "center", mt: 2}}>
+            <FormControlLabel value="phonecall" control={<Radio/>} label= "Phone Call"
+            sx={{bgcolor: "#f9f5ff", px:2, py:1, borderRadius:"10px", mb:1,
+              width: "100%", "& .MuiTypography-root": { fontWeight: "bold" }}}/>
+            <FormControlLabel value="inperson" control={<Radio/>} label= "In-Person visit"
+            sx={{bgcolor: "#f9f5ff", px:2, py:1, borderRadius:"10px", mb:1,
+              width: "100%", "& .MuiTypography-root": { fontWeight: "bold" }}}/>
+        </RadioGroup>
+      </DialogContent>
+      <DialogActions sx={{ justifyContent: "center"}}>
+        <Button onClick={handleFormSelection} color="primary" disabled={!formType}>Submit</Button>
+        <Button onClick={handleCloseDialog} color="secondary">Cancel</Button>
+      </DialogActions>
+    </Dialog>
+    </>
   );
 }
