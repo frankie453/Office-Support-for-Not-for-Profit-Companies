@@ -20,6 +20,7 @@ import LoginPage from "./pages/LoginPage";
 import axios from "axios";
 import { BASE_URL } from "./constants";
 import { useLocation } from "react-router-dom";
+import InPersonForm from "./pages/InPersonForm";
 
 function App() {
   const [session, setSession] = useState(localStorage.getItem("token"));

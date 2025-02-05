@@ -70,7 +70,7 @@ function InPersonForm(){
   
     return(
         <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{padding: '20px', maxWidth: '500px', margin: 'auto', backgroundColor: '#F9F0F0', borderRadius: '8px'}}>
+            <Box sx={{padding: '20px', maxWidth: '500px', margin: 'auto', backgroundColor: '#f9f5ff', borderRadius: '8px'}}>
 
             
             <Typography variant="h5" align="center"> Phone call form</Typography>
@@ -90,7 +90,7 @@ function InPersonForm(){
                     </Select>
                 </FormControl>
 
-                <FormControl>
+                <FormControl fullWidth margin="normal">
                     <InputLabel>Task Transferred to *</InputLabel>
                     <Select
                        name="taskTransferredTo"
@@ -122,6 +122,7 @@ function InPersonForm(){
                        value={formData.lastName}
                        onChange={handleChange}
                        error={!!errors.lastName}
+                       helperText={errors.lastName}
 
                     />
                 </Box>
@@ -181,7 +182,7 @@ function InPersonForm(){
                     <Button type="submit" variant="contained" color="primary" fullWidth> 
                         Save Form 
                     </Button>
-                    <Button type="button" variant="contained" color="error" onClick={handleReset} fullWidth>
+                    <Button type="button" variant="contained" color="secondary" onClick={handleReset} fullWidth>
                         Clear Form
                     </Button>
                 </Box>
