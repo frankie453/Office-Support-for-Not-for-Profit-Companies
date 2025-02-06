@@ -13,29 +13,19 @@ import { useState } from "react";
 import axios from "axios";
 import { BASE_URL } from "../constants";
 import { Error } from "@mui/icons-material";
+import { useMsal } from "@azure/msal-react";
+import { loginRequest } from "../authConfig";
 
-export default function LoginPage({
-  handleSession,
-}: {
-  handleSession: (session: string) => void;
-}) {
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState(0);
+export default function LoginPage() {
+  const { instance } = useMsal();
   const handleLogin = () => {
-    axios
-      .post(BASE_URL + "login/", {
-        email: email,
-      })
+    instance
+      .loginPopup(loginRequest)
       .then((res) => {
-        console.log(res.data);
-        localStorage.setItem("expiry", res.data.expiry);
-        localStorage.setItem("token", res.data.token);
-        handleSession(res.data.token);
-        setError(0);
+        instance.setActiveAccount(res.account);
       })
       .catch((e) => {
-        console.log(e.message);
-        setError(e.status);
+        console.log(e);
       });
   };
 
@@ -50,19 +40,8 @@ export default function LoginPage({
         </Stack>
 
         <Typography textAlign={"center"}>
-          Please sign-in by using an email connected in your Outlook application
+          Please sign-in with your Microsoft Account
         </Typography>
-        {error !== 0 && (
-          <Alert severity="error">
-            This email address has not been found in your Outlook application
-          </Alert>
-        )}
-        <TextField
-          placeholder="Email"
-          value={email}
-          fullWidth
-          onChange={(event) => setEmail(event.target.value)}
-        />
         <Button variant="contained" size="large" onClick={handleLogin}>
           Sign-In
         </Button>

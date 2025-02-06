@@ -3,16 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router";
 import Layout from "./components/Layout";
 import ReportsPage from "./pages/Reports";
 import Dashboard from "./pages/Dashboard";
-import {
-  ThemeProvider,
-  CssBaseline,
-  AppBar,
-  Button,
-  Stack,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-import theme from "./theme";
 import Categories from "./pages/Categories";
 import TaskPage from "./pages/TaskPage";
 import PhoneCallForm from "./pages/PhoneCallForm";
@@ -22,24 +12,17 @@ import { BASE_URL } from "./constants";
 import { useLocation } from "react-router-dom";
 import InPersonForm from "./pages/InPersonForm";
 
+import { useIsAuthenticated, useMsal } from "@azure/msal-react";
+import { loginRequest } from "./authConfig";
+
 function App() {
-  const [session, setSession] = useState(localStorage.getItem("token"));
-  // Check if token is valid, if not, clear storage on URL change
-  const location = useLocation();
-  useEffect(() => {
-    axios
-      .get(BASE_URL, {
-        headers: {
-          Authorization: "Token " + session,
-        },
-      })
-      .then(() => {})
-      .catch(() => {
-        localStorage.removeItem("expiry");
-        localStorage.removeItem("token");
-        setSession(null);
-      });
-  }, [location]);
+  const isAuthenticated = useIsAuthenticated();
+  // const { instance } = useMsal();
+  // useEffect(() => {
+  //   instance
+  //     .acquireTokenSilent(loginRequest)
+  //     .then((thing) => console.log(thing.accessToken));
+  // }, [isAuthenticated]);
   return (
     <>
       {/* <AppBar position="static" style={{ flex: 1 }}>
@@ -61,10 +44,10 @@ function App() {
         </Toolbar>
       </AppBar> */}
       <Routes>
-        {session === null ? (
-          <Route path="*" element={<LoginPage handleSession={setSession} />} />
+        {!isAuthenticated ? (
+          <Route path="*" element={<LoginPage />} />
         ) : (
-          <Route path="/" element={<Layout handleSession={setSession} />}>
+          <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="reports" element={<ReportsPage />} />
@@ -75,8 +58,6 @@ function App() {
             <Route path="*" element={<div>Page not found</div>} />
           </Route>
         )}
-
-        {/* Wrap routes with the Layout */}
       </Routes>
     </>
   );

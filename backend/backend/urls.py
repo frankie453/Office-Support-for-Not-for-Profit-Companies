@@ -18,8 +18,6 @@ from django.contrib import admin
 from django.urls import include, path
 from api.views import home
 from rest_framework import routers
-from api.views import LoginView
-from knox.views import LogoutView
 
 
 router = routers.DefaultRouter()
@@ -30,6 +28,4 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/', home),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    path("login/", LoginView.as_view(), name='login'),
-    path("logout/", LogoutView.as_view(), name='logout')
 ]
