@@ -20,10 +20,9 @@ interface Email {
 interface EmailViewProps {
   category?: string;
   onEmailCountChange?: (count: number) => void;
-  limit?: number;
 }
 
-const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, limit }) => {
+const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange }) => {
   const { instance } = useMsal();
   const [emails, setEmails] = useState<Email[]>(() => {
     const cachedEmails = sessionStorage.getItem(`emails-${category}`);
@@ -76,7 +75,7 @@ const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, lim
       {emails.length === 0 ? (
         <Typography variant="body1">No emails found for this category</Typography>
       ) : (
-        (limit ? emails.slice(0, limit) : emails).map(email => (
+        emails.map(email => (
           <Card key={email.id} sx={{ mb: 2 }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
