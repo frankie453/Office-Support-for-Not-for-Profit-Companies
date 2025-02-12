@@ -2,11 +2,6 @@ import React from 'react';
 import {
   Box,
   Typography,
-  Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   IconButton,
   Stack,
   Grid,
@@ -15,6 +10,7 @@ import { ArrowForward as ArrowForwardIcon } from '@mui/icons-material';
 import { reportsExamples } from '../reports_examples';
 import { useNavigate } from 'react-router-dom';
 import { ReportGridIcon } from '../components/ReportGridIcon';
+import EmailView from '../components/EmailView';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -50,23 +46,13 @@ export default function DashboardPage() {
       <Box>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
           <Typography variant="h5">Recent Emails</Typography>
-          <IconButton>
+          <IconButton onClick={() => navigate('/categories')}>
             <ArrowForwardIcon />
           </IconButton>
         </Stack>
-        <List>
-          {[1, 2, 3, 4].map((item) => (
-            <ListItem key={item} sx={{ bgcolor: 'background.paper', mb: 1, borderRadius: 1 }}>
-              <ListItemAvatar>
-                <Avatar>A</Avatar>
-              </ListItemAvatar>
-              <ListItemText 
-                primary="Subject | Description"
-                sx={{ color: 'text.primary' }}
-              />
-            </ListItem>
-          ))}
-        </List>
+        <Box sx={{ maxHeight: '500px', overflow: 'auto' }}>
+          <EmailView limit={10} onEmailCountChange={() => {}} />
+        </Box>
       </Box>
     </Box>
   );

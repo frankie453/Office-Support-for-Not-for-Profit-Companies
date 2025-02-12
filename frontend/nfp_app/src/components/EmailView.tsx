@@ -7,10 +7,16 @@ import { loginRequest, graphConfig } from "../authConfig";
 interface Email {
   id: string;
   subject: string;
-  from: {
-    emailAddress: {
-      address: string;
-      name: string;
+  from?: {
+    emailAddress?: {
+      address?: string;
+      name?: string;
+    }
+  };
+  sender?: {
+    emailAddress?: {
+      address?: string;
+      name?: string;
     }
   };
   receivedDateTime: string;
@@ -20,9 +26,10 @@ interface Email {
 interface EmailViewProps {
   category?: string;
   onEmailCountChange?: (count: number) => void;
+  limit?: number;
 }
 
-const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange }) => {
+const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, limit }) => {
   const { instance } = useMsal();
   const [emails, setEmails] = useState<Email[]>(() => {
     const cachedEmails = sessionStorage.getItem(`emails-${category}`);
@@ -73,33 +80,36 @@ const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange }) =
   return (
     <Box sx={{ mt: 2 }}>
       {emails.length === 0 ? (
-        <Typography variant="body1">No emails found for this category</Typography>
+        <Typography variant="body1">No emails found</Typography>
       ) : (
-        emails.map(email => (
-          <Card key={email.id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {email.subject}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                <EmailIcon fontSize="small" /> {email.from.emailAddress.name} &lt;{email.from.emailAddress.address}&gt;
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Received: {new Date(email.receivedDateTime).toLocaleString()}
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                {email.bodyPreview}
-              </Typography>
-            </CardContent>
-            <CardActions>
-              <Link href={`https://outlook.office.com/mail/inbox/id/${email.id}`} target="_blank" rel="noopener noreferrer">
-                <IconButton aria-label="open in Outlook">
-                  <OpenInNewIcon />
-                </IconButton>
-              </Link>
-            </CardActions>
-          </Card>
-        ))
+        (limit ? emails.slice(0, limit) : emails).map(email => {
+          const sender = email.from?.emailAddress || email.sender?.emailAddress;
+          return (
+            <Card key={email.id} sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {email.subject}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <EmailIcon fontSize="small" /> {sender?.name || 'Unknown'} {sender?.address ? `<${sender.address}>` : ''}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Received: {new Date(email.receivedDateTime).toLocaleString()}
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  {email.bodyPreview}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Link href={`https://outlook.office.com/mail/inbox/id/${email.id}`} target="_blank" rel="noopener noreferrer">
+                  <IconButton aria-label="open in Outlook">
+                    <OpenInNewIcon />
+                  </IconButton>
+                </Link>
+              </CardActions>
+            </Card>
+          );
+        })
       )}
     </Box>
   );
