@@ -14,6 +14,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
+  Alert,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -29,6 +30,7 @@ import { Category } from "../category";
 
 export default function Categories() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [newCategoryName, setNewCategoryName] = useState("");
 
@@ -47,7 +49,9 @@ export default function Categories() {
           }))
         );
       })
-      .catch((er) => console.log(er.message));
+      .catch((er) => {
+        setError(er.message);
+      });
   };
 
   useEffect(() => {
@@ -68,14 +72,14 @@ export default function Categories() {
         refreshCategories();
         setNewCategoryName("");
       })
-      .catch((er) => console.log(er.message));
+      .catch((er) => setError(er.message));
   };
 
   const handleDeleteCategory = (id: number) => {
     axios
       .delete(BASE_URL + "api/categories/" + id + "/")
       .then((res) => refreshCategories())
-      .catch((er) => console.log(er));
+      .catch((er) => setError(er.message));
   };
 
   const updateCategoryCount = (categoryName: string, count: number) => {
@@ -133,6 +137,7 @@ export default function Categories() {
       </Box>
 
       <List sx={{ width: "100%", bgcolor: "background.paper" }}>
+        {error && <Alert severity="error">{error}</Alert>}
         {filteredCategories.map((category) => (
           <Accordion key={category.id}>
             <AccordionSummary
