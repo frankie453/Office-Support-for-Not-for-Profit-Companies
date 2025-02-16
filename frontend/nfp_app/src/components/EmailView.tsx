@@ -3,6 +3,7 @@ import { useMsal } from "@azure/msal-react";
 import { Box, Typography, Card, CardContent, CardActions, IconButton, Link } from '@mui/material';
 import { Email as EmailIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { loginRequest, graphConfig } from "../authConfig";
+import { BASE_URL } from '../constants';
 
 interface Email {
   id: string;
@@ -44,32 +45,34 @@ const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, lim
     const getEmails = async () => {
       try {
         const token = await instance.acquireTokenSilent(loginRequest);
-        let endpoint = graphConfig.graphMailEndpoint;
-        
-        // Update the filter query to handle uncategorized emails
-        if (category === 'Uncategorized') {
-          endpoint += `?$filter=parentFolderId eq 'inbox' and not categories/any()&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
-        } else if (category) {
-          endpoint += `?$filter=parentFolderId eq 'inbox' and categories/any(c: c eq '${category}')&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
-        } else {
-          endpoint += `?$filter=parentFolderId eq 'inbox'&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
-        }
+        console.log('Token:', token.accessToken);
 
-        const response = await fetch(endpoint, {
+        const response = await fetch(`${BASE_URL}api/emails/${category ? `?category=${category}` : ''}`, {
           headers: {
-            Authorization: `Bearer ${token.accessToken}`
+            'Authorization': `Bearer ${token.accessToken}`,
+            'Accept': 'application/json'
           }
         });
 
+        console.log('Response:', response);
+        
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
           throw new Error(`Error fetching emails: ${response.statusText}`);
         }
 
         const data = await response.json();
-        setEmails(data.value);
-        sessionStorage.setItem(`emails-${category}`, JSON.stringify(data.value));
-        if (onEmailCountChange) {
-          onEmailCountChange(data.value.length);
+        console.log('Emails data:', data);
+        
+        if (data.value) {
+          setEmails(data.value);
+          sessionStorage.setItem(`emails-${category}`, JSON.stringify(data.value));
+          if (onEmailCountChange) {
+            onEmailCountChange(data.value.length);
+          }
+        } else {
+          console.error('Unexpected data format:', data);
         }
         setShouldFetch(false);
       } catch (error) {

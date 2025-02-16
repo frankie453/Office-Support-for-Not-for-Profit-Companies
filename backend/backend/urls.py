@@ -19,6 +19,7 @@ from django.urls import include, path
 from api.views import home
 from rest_framework import routers
 from api.views import CategoryView
+from api.views import get_emails
 
 
 router = routers.DefaultRouter()
@@ -26,7 +27,9 @@ router.register(r"categories", CategoryView)
 
 
 urlpatterns = [
+    path("", home),
     path("api/", include(router.urls)),
     path("admin/", admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/emails/', get_emails, name='get_emails'),
 ]
