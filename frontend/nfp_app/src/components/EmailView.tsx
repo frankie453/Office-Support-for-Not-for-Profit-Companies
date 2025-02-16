@@ -21,6 +21,7 @@ interface Email {
   };
   receivedDateTime: string;
   bodyPreview: string;
+  categories: string[];
 }
 
 interface EmailViewProps {
@@ -44,8 +45,14 @@ const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, lim
       try {
         const token = await instance.acquireTokenSilent(loginRequest);
         let endpoint = graphConfig.graphMailEndpoint;
-        if (category) {
-          endpoint += `?$filter=categories/any(c: c eq '${category}')`;
+        
+        // Update the filter query to handle uncategorized emails
+        if (category === 'Uncategorized') {
+          endpoint += `?$filter=parentFolderId eq 'inbox' and not categories/any()&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
+        } else if (category) {
+          endpoint += `?$filter=parentFolderId eq 'inbox' and categories/any(c: c eq '${category}')&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
+        } else {
+          endpoint += `?$filter=parentFolderId eq 'inbox'&$select=id,subject,from,sender,receivedDateTime,bodyPreview,categories`;
         }
 
         const response = await fetch(endpoint, {
@@ -96,6 +103,42 @@ const EmailView: React.FC<EmailViewProps> = ({ category, onEmailCountChange, lim
                 <Typography variant="body2" color="text.secondary">
                   Received: {new Date(email.receivedDateTime).toLocaleString()}
                 </Typography>
+                {email.categories && email.categories.length > 0 ? (
+                  <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                    {email.categories.map(cat => (
+                      <Typography 
+                        key={cat} 
+                        variant="body2" 
+                        sx={{ 
+                          bgcolor: 'primary.light',
+                          color: 'primary.contrastText',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        {cat}
+                      </Typography>
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      mt: 1,
+                      bgcolor: 'grey.300',
+                      color: 'text.secondary',
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                      fontSize: '0.75rem',
+                      display: 'inline-block'
+                    }}
+                  >
+                    Uncategorized
+                  </Typography>
+                )}
                 <Typography variant="body2" sx={{ mt: 1 }}>
                   {email.bodyPreview}
                 </Typography>
