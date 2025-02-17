@@ -22,7 +22,6 @@ function InPersonForm() {
     lastName: "",
     email: "",
     notes: "",
-    whoTookPart: "",
     date: null as Date | null,
   });
 
@@ -66,7 +65,6 @@ function InPersonForm() {
       lastName: "",
       email: "",
       notes: "",
-      whoTookPart: "",
       date: null as Date | null,
     });
     setErrors({});
@@ -168,20 +166,6 @@ function InPersonForm() {
             margin="normal"
             onChange={handleChange}
           />
-
-          <FormControl fullWidth margin="normal">
-            <InputLabel> Who took parts</InputLabel>
-            <Select
-              name="whoTookPart"
-              value={formData.whoTookPart}
-              onChange={handleChange}
-            >
-              <MenuItem value="">Select Employee</MenuItem>
-              <MenuItem value="employee1">Employee 1</MenuItem>
-              <MenuItem value="employee2">Employee 2</MenuItem>
-              <MenuItem value="employee3">Employee 3</MenuItem>
-            </Select>
-          </FormControl>
 
           <DatePicker
             label="Date of meeting *"

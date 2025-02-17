@@ -8,6 +8,8 @@ from knox.views import LoginView as KnoxLoginView
 # Create your views here.
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
+from .models import InPersonVisitForm, PhoneCallForm
+from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
 import win32com.client
 import pythoncom
 import win32com
@@ -39,3 +41,12 @@ class LogoutView(viewsets.ViewSet):
     def destroy(self, request, *args, **kwargs):
         logout(request)
         return HttpResponse(status=200)
+
+class InPersonVisitViewSet(viewsets.ModelViewSet):
+    queryset = InPersonVisitForm.objects.all()
+    serializer_class = InPersonVisitFormSerializer
+
+
+class PhoneCallViewSet(viewsets.ModelViewSet):
+    queryset = PhoneCallForm.objects.all()
+    serializer_class = PhoneCallFormSerializer

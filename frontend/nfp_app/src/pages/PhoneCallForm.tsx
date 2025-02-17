@@ -14,7 +14,6 @@ function PhoneCallForm(){
         lastName: "",
         email: "",
         notes: "",
-        whoTookCall: "",
         date: null as Date | null
      });
 
@@ -57,7 +56,6 @@ function PhoneCallForm(){
             lastName: "",
             email: "",
             notes: "",
-            whoTookCall: "",
             date: null 
             });
         setErrors({});
@@ -167,21 +165,6 @@ function PhoneCallForm(){
                    onChange={handleChange}
         
                 />
-
-                <FormControl fullWidth margin="normal">
-                    <InputLabel> Who took the Call</InputLabel>
-                    <Select
-                       name="whoTookCall"
-                       value={formData.whoTookCall}
-                       onChange={handleChange}
-                    
-                    >
-                        <MenuItem value="">Select Employee</MenuItem>
-                        <MenuItem value="employee1">Employee 1</MenuItem>
-                        <MenuItem value="employee2">Employee 2</MenuItem>
-                        <MenuItem value="employee3">Employee 3</MenuItem>
-                    </Select>
-                </FormControl>
 
                 <DatePicker
                     label="Call Date *"
