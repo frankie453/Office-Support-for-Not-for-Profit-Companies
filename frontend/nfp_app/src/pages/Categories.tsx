@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -14,55 +14,77 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
-} from '@mui/material';
+  Alert,
+} from "@mui/material";
 import {
   Search as SearchIcon,
   Clear as ClearIcon,
   ExpandMore as ExpandMoreIcon,
   Delete as DeleteIcon,
   Add as AddIcon,
-} from '@mui/icons-material';
-import { categories as initialCategories, Category } from '../category';
-import EmailView from '../components/EmailView';
+} from "@mui/icons-material";
+import EmailView from "../components/EmailView";
+import axios from "axios";
+import { BASE_URL } from "../constants";
+import { Category } from "../category";
 
 export default function Categories() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const refreshCategories = () => {
+    axios
+      .get(BASE_URL + "api/categories/")
+      .then((res) => {
+        const data = res.data;
+        const oldCategories = structuredClone(categories);
+        setCategories(
+          data.map((category: { id: number; name: string }) => ({
+            ...category,
+            count:
+              oldCategories.find((cat) => cat.id === category.id)?.count ?? 0,
+            subCategories: [],
+          }))
+        );
+      })
+      .catch((er) => {
+        setError(er.message);
+      });
+  };
 
   useEffect(() => {
-    console.log("Categories component mounted");
-    return () => {
-      console.log("Categories component unmounted");
-    };
+    // Load categories
+    refreshCategories();
   }, []);
 
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddCategory = () => {
-    if (newCategoryName.trim() === '') return;
+    if (newCategoryName.trim() === "") return;
 
-    const newCategory: Category = {
-      id: (categories.length + 1).toString(),
-      name: newCategoryName,
-      code: newCategoryName.charAt(0).toUpperCase(),
-      count: 0,
-      subCategories: [],
-    };
-
-    setCategories([...categories, newCategory]);
-    setNewCategoryName('');
+    axios
+      .post(BASE_URL + "api/categories/", { name: newCategoryName })
+      .then((res) => {
+        refreshCategories();
+        setNewCategoryName("");
+      })
+      .catch((er) => setError(er.message));
   };
 
-  const handleDeleteCategory = (id: string) => {
-    setCategories(categories.filter(category => category.id !== id));
+  const handleDeleteCategory = (id: number) => {
+    axios
+      .delete(BASE_URL + "api/categories/" + id + "/")
+      .then((res) => refreshCategories())
+      .catch((er) => setError(er.message));
   };
 
   const updateCategoryCount = (categoryName: string, count: number) => {
-    setCategories(prevCategories =>
-      prevCategories.map(category =>
+    setCategories((prevCategories) =>
+      prevCategories.map((category) =>
         category.name === categoryName ? { ...category, count } : category
       )
     );
@@ -88,7 +110,7 @@ export default function Categories() {
           ),
           endAdornment: searchTerm && (
             <InputAdornment position="end">
-              <IconButton onClick={() => setSearchTerm('')} edge="end">
+              <IconButton onClick={() => setSearchTerm("")} edge="end">
                 <ClearIcon />
               </IconButton>
             </InputAdornment>
@@ -96,7 +118,7 @@ export default function Categories() {
         }}
       />
 
-      <Box sx={{ display: 'flex', mb: 3 }}>
+      <Box sx={{ display: "flex", mb: 3 }}>
         <TextField
           fullWidth
           placeholder="New category name"
@@ -114,7 +136,8 @@ export default function Categories() {
         </Button>
       </Box>
 
-      <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+      <List sx={{ width: "100%", bgcolor: "background.paper" }}>
+        {error && <Alert severity="error">{error}</Alert>}
         {filteredCategories.map((category) => (
           <Accordion key={category.id}>
             <AccordionSummary
@@ -124,11 +147,11 @@ export default function Categories() {
             >
               <ListItem>
                 <ListItemAvatar>
-                  <Avatar sx={{ bgcolor: 'primary.light' }}>
-                    {category.code}
+                  <Avatar sx={{ bgcolor: "primary.light" }}>
+                    {category.name.charAt(0).toUpperCase()}
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText 
+                <ListItemText
                   primary={category.name}
                   secondary={`${category.count} emails`}
                 />
@@ -142,9 +165,11 @@ export default function Categories() {
               </ListItem>
             </AccordionSummary>
             <AccordionDetails>
-              <EmailView 
-                category={category.name} 
-                onEmailCountChange={(count) => updateCategoryCount(category.name, count)} 
+              <EmailView
+                category={category.name}
+                onEmailCountChange={(count) =>
+                  updateCategoryCount(category.name, count)
+                }
               />
             </AccordionDetails>
           </Accordion>

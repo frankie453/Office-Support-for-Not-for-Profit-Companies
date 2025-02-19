@@ -57,3 +57,12 @@ class PhoneCallForm(models.Model):
 
     def __str__(self):
         return f"{self.firstName} {self.lastName} - {self.issue}"
+    
+class Category(models.Model):
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ["name"]
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name

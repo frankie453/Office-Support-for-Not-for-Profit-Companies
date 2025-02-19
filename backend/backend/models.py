@@ -20,3 +20,11 @@ class InPersonVisitForm(models.Model):
     email = models.EmailField()
     notes = models.TextField(blank=True)
     date = models.DateField()
+class Category(models.Model):
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ["name"]
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
