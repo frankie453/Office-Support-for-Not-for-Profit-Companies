@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   Button,
   TextField,
@@ -12,6 +13,7 @@ import {
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 function InPersonForm() {
   //initialize form data
@@ -41,8 +43,13 @@ function InPersonForm() {
   };
 
   const handleDateChange = (date: any) => {
-    setFormData({ ...formData, date });
-  };
+    if (!date) { //if date empty
+        setFormData({ ...formData, date: null }); 
+        return;
+    }
+    const formattedDate = date.format("YYYY-MM-DD"); //ensure the date is in the right format
+    setFormData({ ...formData, date: formattedDate });
+};
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -71,11 +78,22 @@ function InPersonForm() {
   };
 
   // Logic to handle form submission, check if the form is valid before submitting
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log(formData);
-      alert("Form submitted successfully!");
+    if(validateForm()) {
+      try {
+        //post request 
+        const response = await axios.post("http://127.0.0.1:8000/api/form/visits/", formData, {
+            headers: { "Content-Type": "application/json" },
+        });
+        alert("Form submitted successfully!");
+        console.log("Response:", response.data);
+        handleReset(); // reset form after submission
+    } catch (error) {
+        console.error("Error submitting form:", error);
+        alert("Failed to submit form. Please try again.");
+    }
+
     }
   };
 
@@ -169,8 +187,9 @@ function InPersonForm() {
 
           <DatePicker
             label="Date of meeting *"
-            value={formData.date}
+            value={formData.date ? dayjs(formData.date) : null}
             onChange={handleDateChange}
+            format="MM/DD/YYYY" 
             slotProps={{
               textField: {
                 fullWidth: true,
