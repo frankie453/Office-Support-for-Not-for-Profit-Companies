@@ -16,16 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from api.views import home
+from api.views import home, TaskView
 from rest_framework import routers
 
 
 router = routers.DefaultRouter()
-
+router.register(r'tasks', TaskView)
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("", home),
     path("admin/", admin.site.urls),
-    path('api/', home),
+    path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.views import View
 from rest_framework import routers, serializers, viewsets
 from django.contrib.auth.models import User
-from .serializers import UserSerializer
+from .serializers import UserSerializer, TaskSerializer
+from .models import Task
 from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 # Create your views here.
@@ -39,3 +40,13 @@ class LogoutView(viewsets.ViewSet):
     def destroy(self, request, *args, **kwargs):
         logout(request)
         return HttpResponse(status=200)
+    
+class TaskView(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def create(self, request, *args, **kwargs):
+        print("Incoming data:", request.data)
+        return super().create(request, *args, **kwargs)
+
+   
