@@ -1,14 +1,16 @@
+from datetime import datetime
 from django.shortcuts import render
 from django.views import View
-from rest_framework import routers, serializers, viewsets
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework import routers, serializers, viewsets, views
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, CategorySerializer
+from .serializers import UserSerializer, CategorySerializer, ReportsCallsSerializer
 from .models import Category
 from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from .models import InPersonVisitForm, PhoneCallForm
+from .models import InPersonVisitForm, PhoneCallForm, ReportsCalls
 from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
 import platform
 from rest_framework.decorators import api_view
@@ -59,10 +61,31 @@ class PhoneCallViewSet(viewsets.ModelViewSet):
     queryset = PhoneCallForm.objects.all()
     serializer_class = PhoneCallFormSerializer
 
+    def create(self, request, *args, **kwargs):
+        # Check if report for the current month-year exists, create one otherwise
+        form_date = datetime.strptime(request.data["date"], "%Y-%m-%d")
+        current_report_date = datetime(form_date.year, form_date.month, 1)
+        request.data._mutable = True
+        request.data["report"] = ReportsCalls.objects.get_or_create(starting_month_year__month=current_report_date.month, starting_month_year__year=current_report_date.year,
+                                                                    defaults={"starting_month_year": current_report_date})[0].pk
+        request.data._mutable = False
+        return super().create(request, *args, **kwargs)
+
 class CategoryView(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
-    
+
+class ReportsCallsView(viewsets.ModelViewSet):
+    serializer_class = ReportsCallsSerializer
+    queryset = ReportsCalls.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=403)
+    def update(self, request, *args, **kwargs):
+        return Response(status=403)
+    def destroy(self, request, *args, **kwargs):
+        return Response(status=403)
+
 @api_view(['GET'])
 def get_emails(request):
     try:

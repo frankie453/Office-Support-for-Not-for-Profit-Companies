@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from api.views import home, InPersonVisitViewSet, PhoneCallViewSet
+from api.views import home, InPersonVisitViewSet, PhoneCallViewSet, ReportsCallsView
 from rest_framework import routers
 from api.views import CategoryView
 from api.views import get_emails
@@ -26,6 +26,7 @@ router = routers.DefaultRouter()
 router.register(r'form/visits', InPersonVisitViewSet)
 router.register(r'form/calls', PhoneCallViewSet)
 router.register(r"categories", CategoryView)
+router.register(r"reports/calls", ReportsCallsView)
 
 
 urlpatterns = [
