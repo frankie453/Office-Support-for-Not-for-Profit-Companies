@@ -18,12 +18,66 @@ export function ReportDetail({
   title: string;
   report: Report;
 }) {
-  const outcoming = (report.content as ReportContentEmails | ReportContentCalls)
-    .outcoming;
   return (
     <Paper style={{ padding: 2 }}>
       <Stack alignItems={"center"} spacing={2}>
-        <Typography fontWeight={"bold"} variant="h3">
+        {report.metadata.type === ReportType.CALLS && (
+          <>
+            <Typography fontWeight={"bold"} variant="h3">
+              {title}
+            </Typography>
+            <Typography variant="h6">
+              {"Total this month: " +
+                (report.content as ReportContentCalls).total}
+            </Typography>
+            <Typography style={{ textDecoration: "underline" }}>
+              Per Day
+            </Typography>
+            <LineChart
+              xAxis={[
+                {
+                  data: (report.content as ReportContentCalls).byDay.map(
+                    (value, i) => i + 1
+                  ),
+                  min: 1,
+                  max: (report.content as ReportContentCalls).byDay.length,
+                },
+              ]}
+              series={[
+                {
+                  data: (report.content as ReportContentCalls).byDay,
+                },
+              ]}
+              width={500}
+              height={300}
+            />
+            <Typography style={{ textDecoration: "underline" }}>
+              By Issue
+            </Typography>
+            <PieChart
+              series={[
+                {
+                  data: (report.content as ReportContentCalls).byIssue,
+                },
+              ]}
+              width={400}
+              height={200}
+            />
+            <Typography style={{ textDecoration: "underline" }}>
+              By Employee
+            </Typography>
+            <PieChart
+              series={[
+                {
+                  data: (report.content as ReportContentCalls).byEmployee,
+                },
+              ]}
+              width={400}
+              height={200}
+            />
+          </>
+        )}
+        {/* <Typography fontWeight={"bold"} variant="h3">
           {title}
         </Typography>
         <Typography variant="h4">Incoming</Typography>
@@ -119,7 +173,7 @@ export function ReportDetail({
               height={200}
             />
           </>
-        )}
+        )} */}
       </Stack>
     </Paper>
   );
