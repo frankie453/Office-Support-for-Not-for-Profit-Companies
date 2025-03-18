@@ -64,6 +64,21 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Task(models.Model):
+    STATUS_CHOICES = [
+        ("todo", "To Do"),
+        ("inProgress", "In Progress"),
+        ("done", "Done"),
+    ]
+    
+    #external_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    title = models.CharField(max_length=255, default="")
+    details = models.TextField(blank=True, default="")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="todo")
+    
+    def __str__(self):
+        return self.title
 
 class ReportsEmails(models.Model):
     class Meta:

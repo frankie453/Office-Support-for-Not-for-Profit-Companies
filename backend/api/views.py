@@ -10,12 +10,13 @@ from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
+from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer, TaskSerializer
 import platform
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
-from .services.graph_service import GraphEmailService
+from .models import Task
+from services.graph_service import GraphEmailService
 
 
 def home(request):
@@ -194,9 +195,16 @@ def login(request):
         "https://graph.microsoft.com/v1.0/me", headers={"Authorization": token}
     )
     if graph_response.status_code != 200:
-        return Response({"error": "Invalid token"}, status=401)
+        return Response({'error': 'Invalid token'}, status=401)
+        
+    return Response({'status': 'authenticated'})
 
-    return Response({"status": "authenticated"})
+class TaskView(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    def create(self, request, *args, **kwargs):
+        print("Incoming data:", request.data)
+        return super().create(request, *args, **kwargs)
 
 @api_view(['GET', 'POST'])
 def generate_monthly_report(request):
