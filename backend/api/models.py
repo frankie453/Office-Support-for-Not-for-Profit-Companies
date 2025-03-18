@@ -1,4 +1,5 @@
 from django.db import models
+import json
 
 # Create your models here.
 
@@ -66,3 +67,19 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+
+class ReportsEmails(models.Model):
+    class Meta:
+        verbose_name_plural = "Reports Emails"
+        ordering = ["-created_at"]
+
+    metadata = models.JSONField(default=dict)
+    content = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Report {self.metadata.get('id')} - {self.metadata.get('type')}"
+
+  
+  

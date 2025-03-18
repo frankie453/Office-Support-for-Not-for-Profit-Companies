@@ -2,8 +2,8 @@ from django.shortcuts import render
 from django.views import View
 from rest_framework import routers, serializers, viewsets
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, CategorySerializer
-from .models import Category
+from .serializers import UserSerializer, CategorySerializer, ReportsEmailsSerializer
+from .models import Category, ReportsEmails
 from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
@@ -14,6 +14,8 @@ import platform
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
+from .services.graph_service import GraphEmailService
+from datetime import datetime
 
 
 def home(request):
@@ -28,7 +30,6 @@ class LoginView(KnoxLoginView):
         try:
             token = request.headers.get('Authorization')
             if token:
-                # Microsoft Graph API validation is sufficient
                 graph_response = requests.get(
                     'https://graph.microsoft.com/v1.0/me',
                     headers={'Authorization': token}
@@ -69,8 +70,6 @@ def get_emails(request):
         category = request.GET.get('category')
         token = request.headers.get('Authorization')
         
-        print(f"Category: {category}")
-        print(f"Token: {token}")
         
         if not token:
             return Response({'error': 'No authorization token'}, status=401)
@@ -126,4 +125,82 @@ def login(request):
         
     return Response({'status': 'authenticated'})
     
+class ReportsEmailsView(viewsets.ModelViewSet):
+    serializer_class = ReportsEmailsSerializer
+    queryset = ReportsEmails.objects.all()
+
+@api_view(['GET'])
+def generate_monthly_report(request):
+    try:
+        token = request.headers.get('Authorization')
+        if not token:
+            return Response({'error': 'No token provided'}, status=401)
+
+        service = GraphEmailService()
+        
+        today = datetime.now()
+        start_date = datetime(today.year, today.month, 1)
+        end_date = datetime.now()
+
+        incoming_filter = (
+            "isDraft eq false and "
+            "parentFolderId eq 'inbox'"
+        )
+        
+        outgoing_filter = (
+            "isDraft eq false and "
+            "parentFolderId eq 'sentitems'"
+        )
+
+        incoming_emails = service.fetch_emails_by_date_range(token, start_date, end_date, incoming_filter)
+        outgoing_emails = service.fetch_emails_by_date_range(token, start_date, end_date, outgoing_filter)
+
+        print(f"Found {len(incoming_emails)} incoming and {len(outgoing_emails)} outgoing emails")
+
+        report = ReportsEmails.objects.create(
+            metadata={
+                'id': ReportsEmails.objects.count() + 1,
+                'date': datetime.now().isoformat(),
+                'type': 'EMAILS',
+            },
+            content={
+                'incoming': {
+                    'total': len(incoming_emails),
+                    'byWeek': service.group_by_week(incoming_emails),
+                    'byCategory': service.group_by_category(incoming_emails, token)
+                },
+                'outcoming': {
+                    'total': len(outgoing_emails),
+                    'byWeek': service.group_by_week(outgoing_emails),
+                    'byCategory': service.group_by_category(outgoing_emails, token)
+                }
+            }
+        )
+
+        return Response({
+            'metadata': {
+                'id': report.metadata['id'],
+                'date': report.metadata['date'],
+                'type': report.metadata['type']
+            },
+            'content': report.content
+        })
+
+    except Exception as e:
+        print(f"Error generating report: {str(e)}")
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+def get_email_reports(request):
+    try:
+        print("Fetching email reports...")
+        reports = ReportsEmails.objects.all().order_by('-created_at')
+        serializer = ReportsEmailsSerializer(reports, many=True)
+        data = serializer.data
+        print("Returning reports:", data)
+        return Response(data)
+    except Exception as e:
+        print(f"Error in get_email_reports: {str(e)}")
+        return Response({'error': str(e)}, status=500)
 

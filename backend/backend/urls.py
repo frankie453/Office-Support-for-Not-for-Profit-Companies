@@ -16,17 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from api.views import home, InPersonVisitViewSet, PhoneCallViewSet
+from api.views import (
+    home, 
+    InPersonVisitViewSet, 
+    PhoneCallViewSet,
+    CategoryView,
+    get_emails,
+    ReportsEmailsView,
+    generate_monthly_report,
+    get_email_reports
+)
 from rest_framework import routers
-from api.views import CategoryView
-from api.views import get_emails
-
 
 router = routers.DefaultRouter()
 router.register(r'form/visits', InPersonVisitViewSet)
 router.register(r'form/calls', PhoneCallViewSet)
 router.register(r"categories", CategoryView)
-
+router.register(r"reports/emails", ReportsEmailsView)
 
 urlpatterns = [
     path("", home),
@@ -34,4 +40,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/emails/', get_emails, name='get_emails'),
+    path('api/generate-monthly-report/', generate_monthly_report, name='generate_monthly_report'),
+    path('api/reports/', get_email_reports, name='get_email_reports'),
 ]
