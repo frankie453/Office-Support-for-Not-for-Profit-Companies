@@ -9,12 +9,13 @@ from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from .models import InPersonVisitForm, PhoneCallForm
-from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
+from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer, TaskSerializer
 import platform
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
-
+from .models import Task
+import json
 
 def home(request):
     return JsonResponse({"message": "Hello from Django!"})
@@ -125,5 +126,11 @@ def login(request):
         return Response({'error': 'Invalid token'}, status=401)
         
     return Response({'status': 'authenticated'})
-    
+
+class TaskView(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    def create(self, request, *args, **kwargs):
+        print("Incoming data:", request.data)
+        return super().create(request, *args, **kwargs)
 

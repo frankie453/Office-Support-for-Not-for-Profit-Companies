@@ -2,6 +2,7 @@ from rest_framework import routers, serializers, viewsets
 from django.contrib.auth.models import User
 from api.models import Category
 from .models import InPersonVisitForm, PhoneCallForm
+from .models import Task
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -25,3 +26,9 @@ class CategorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name"]
+
+class TaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = '__all__'
+        
