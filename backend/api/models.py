@@ -54,6 +54,7 @@ class PhoneCallForm(models.Model):
     email = models.EmailField()
     notes = models.TextField(blank=True)
     date = models.DateField()
+    report = models.ForeignKey("ReportsCalls", on_delete=models.SET_NULL, blank=True, null=True, related_name='forms')
 
     def __str__(self):
         return f"{self.firstName} {self.lastName} - {self.issue}"
@@ -66,15 +67,13 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-    
-class Report(models.Model):
 
-    REPORT_TYPE = [
-        ('email', 'Email'),
-        ('call', 'Call'),
-        ('visit', 'visits')
-    ]
-    type = models.CharField(max_length=100, choices=REPORT_TYPE)
-    month = models.DateTimeField("Y%")
-    creationDate = models.DateField()
-    total_visits = models.BigIntegerField()
+class ReportsCalls(models.Model):
+    class Meta:
+        verbose_name_plural = "Reports Calls"
+        ordering = ["-starting_month_year"]
+    starting_month_year = models.DateField(editable=False)
+    
+
+    def __str__(self):
+        return "Report " + str(self.starting_month_year.year) + "-" + str(self.starting_month_year.month)

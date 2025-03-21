@@ -1,7 +1,7 @@
 from rest_framework import routers, serializers, viewsets
 from django.contrib.auth.models import User
 from api.models import Category
-from .models import InPersonVisitForm, PhoneCallForm
+from .models import InPersonVisitForm, PhoneCallForm, ReportsCalls
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -20,6 +20,13 @@ class PhoneCallFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = PhoneCallForm
         fields = '__all__'
+    report = serializers.PrimaryKeyRelatedField(queryset=ReportsCalls.objects.all())
+
+class ReportsCallsSerializer(serializers.ModelSerializer):
+    forms = PhoneCallFormSerializer(many=True, read_only=True)
+    class Meta:
+        model = ReportsCalls
+        fields = ['id', 'starting_month_year', 'forms']
 
 class CategorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:

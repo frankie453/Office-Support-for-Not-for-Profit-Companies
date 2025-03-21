@@ -31,7 +31,7 @@ export function ReportGridIcon({ report }: { report: Report }) {
               {title}
             </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {"Generated at " + report.metadata.date.toLocaleDateString()}
+              {"Starting at " + report.metadata.date.toLocaleDateString()}
             </Typography>
           </CardContent>
         </CardActionArea>

@@ -8,17 +8,10 @@ export type Report = {
 };
 
 export type ReportContentCalls = {
-  incoming: {
-    total: number;
-    byWeek: number[];
-    byCategory: { label: string; value: number }[];
-  };
-
-  outcoming: {
-    total: number;
-    byWeek: number[];
-    byCategory: { label: string; value: number }[];
-  };
+  total: number;
+  byDay: number[];
+  byIssue: { label: string; value: number }[];
+  byEmployee: { label: string; value: number }[];
 };
 
 export type ReportContentEmails = {
