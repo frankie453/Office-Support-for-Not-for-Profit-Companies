@@ -66,3 +66,15 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Report(models.Model):
+
+    REPORT_TYPE = [
+        ('email', 'Email'),
+        ('call', 'Call'),
+        ('visit', 'visits')
+    ]
+    type = models.CharField(max_length=100, choices=REPORT_TYPE)
+    month = models.DateTimeField("Y%")
+    creationDate = models.DateField()
+    total_visits = models.BigIntegerField()
