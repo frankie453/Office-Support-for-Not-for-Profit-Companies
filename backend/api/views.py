@@ -11,11 +11,13 @@ from rest_framework.authtoken.serializers import AuthTokenSerializer
 from .models import InPersonVisitForm, PhoneCallForm
 from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
 import platform
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
 from .services.graph_service import GraphEmailService
 from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.permissions import AllowAny
 
 
 def home(request):
@@ -129,8 +131,12 @@ class ReportsEmailsView(viewsets.ModelViewSet):
     serializer_class = ReportsEmailsSerializer
     queryset = ReportsEmails.objects.all()
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])  # Allow both GET and POST
 def generate_monthly_report(request):
+    print(f"Received {request.method} request with data:", request.data)  # Debug print
+    if request.method == 'GET':
+        return Response({'message': 'Use POST to generate report'})
+        
     try:
         token = request.headers.get('Authorization')
         if not token:
@@ -138,19 +144,24 @@ def generate_monthly_report(request):
 
         service = GraphEmailService()
         
-        today = datetime.now()
-        start_date = datetime(today.year, today.month, 1)
-        end_date = datetime.now()
+        # Get mode and date range from request
+        mode = request.data.get('mode', 'month')
+        date_range = request.data.get('dateRange')
 
-        incoming_filter = (
-            "isDraft eq false and "
-            "parentFolderId eq 'inbox'"
-        )
-        
-        outgoing_filter = (
-            "isDraft eq false and "
-            "parentFolderId eq 'sentitems'"
-        )
+        # Set date range based on mode
+        if mode == 'month':
+            today = datetime.now()
+            start_date = datetime(today.year, today.month, 1)
+            end_date = datetime.now()
+        else:
+            try:
+                start_date = datetime.fromisoformat(date_range['start'].replace('Z', '+00:00'))
+                end_date = datetime.fromisoformat(date_range['end'].replace('Z', '+00:00'))
+            except (KeyError, ValueError) as e:
+                return Response({'error': 'Invalid date range format'}, status=400)
+
+        incoming_filter = "isDraft eq false and parentFolderId eq 'inbox'"
+        outgoing_filter = "isDraft eq false and parentFolderId eq 'sentitems'"
 
         incoming_emails = service.fetch_emails_by_date_range(token, start_date, end_date, incoming_filter)
         outgoing_emails = service.fetch_emails_by_date_range(token, start_date, end_date, outgoing_filter)
@@ -203,4 +214,3 @@ def get_email_reports(request):
     except Exception as e:
         print(f"Error in get_email_reports: {str(e)}")
         return Response({'error': str(e)}, status=500)
-

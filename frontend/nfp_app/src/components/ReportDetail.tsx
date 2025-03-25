@@ -21,9 +21,9 @@ export function ReportDetail({
   const outcoming = (report.content as ReportContentEmails | ReportContentCalls)
     .outcoming;
   return (
-    <Paper style={{ padding: 2 }}>
+    <Paper style={{ padding: 3}}>
       <Stack alignItems={"center"} spacing={2}>
-        <Typography fontWeight={"bold"} variant="h3">
+        <Typography fontWeight={"bold"} variant="h4">
           {title}
         </Typography>
         <Typography variant="h4">Incoming</Typography>

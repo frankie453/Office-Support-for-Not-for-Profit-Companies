@@ -35,11 +35,11 @@ router.register(r"categories", CategoryView)
 router.register(r"reports/emails", ReportsEmailsView)
 
 urlpatterns = [
+    path('api/generate-monthly-report/', generate_monthly_report, name='generate_monthly_report'),
     path("", home),
     path("api/", include(router.urls)),
     path("admin/", admin.site.urls),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/emails/', get_emails, name='get_emails'),
-    path('api/generate-monthly-report/', generate_monthly_report, name='generate_monthly_report'),
-    path('api/reports/', get_email_reports, name='get_email_reports'),
+    path('api/reports/emails/', get_email_reports, name='get_email_reports'),
 ]

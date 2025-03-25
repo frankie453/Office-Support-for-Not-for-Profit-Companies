@@ -13,6 +13,7 @@ import {
   TextField,
   Toolbar,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -23,6 +24,9 @@ import { useState } from "react";
 import { ReportType } from "../types";
 import { Dayjs } from "dayjs";
 import { Link, NavLink } from "react-router";
+import { ReportGenerator } from "../components/ReportGenerator";
+import { getEmailReports } from '../services/reportService';
+import { useMsal } from "@azure/msal-react";
 
 type ReportFilter = {
   type: ReportType | string;
@@ -31,16 +35,24 @@ type ReportFilter = {
 };
 
 export default function ReportsPage() {
+  const { instance } = useMsal();
+
   const [reportTypeFilter, setReportTypeFilter] = useState<ReportFilter>({
     type: "All",
     start: null,
     end: null,
   });
+
+  const handleReportGenerated = async () => {
+    await getEmailReports(instance);
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" sx={{ mb: 4 }}>
-        Reports
+      <Typography variant="h4" sx={{ mb: 3}}>
+        Email Reports
       </Typography>
+
       <Stack alignItems={"center"} justifyContent={"center"}>
         <Stack direction={"row"} width={"100%"} justifyContent={"space-around"}>
           <Stack
@@ -97,6 +109,7 @@ export default function ReportsPage() {
                   label={"To"}
                   views={["month", "year"]}
                 />
+                  <ReportGenerator onReportGenerated={handleReportGenerated} />
               </LocalizationProvider>
             </Stack>
           </Stack>
