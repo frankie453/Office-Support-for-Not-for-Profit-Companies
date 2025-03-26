@@ -14,16 +14,13 @@ class GraphEmailService:
         """Fetch emails within date range with caching"""
         cache_key = f"emails_{start_date.strftime('%Y%m')}_{end_date.strftime('%Y%m')}_{additional_filter}"
         
-        # Try to get from cache first
         cached_emails = cache.get(cache_key)
         if cached_emails:
             return cached_emails
 
-        # Format dates for Graph API
         start_date_str = start_date.strftime('%Y-%m-%dT00:00:00Z')
         end_date_str = end_date.strftime('%Y-%m-%dT23:59:59Z')
 
-        # Build Graph API query
         filter_query = (
             f"receivedDateTime ge {start_date_str} and "
             f"receivedDateTime le {end_date_str}"
@@ -71,11 +68,11 @@ class GraphEmailService:
 
     def group_by_week(self, emails: List[Dict]) -> List[int]:
         """Group emails into weekly counts"""
-        weekly_counts = [0] * 4  # Initialize 4 weeks
+        weekly_counts = [0] * 4  
         
         for email in emails:
             received_date = datetime.fromisoformat(email['receivedDateTime'].replace('Z', '+00:00'))
-            week_number = (received_date.day - 1) // 7  # 0-3 for four weeks
+            week_number = (received_date.day - 1) // 7  
             if 0 <= week_number < 4:
                 weekly_counts[week_number] += 1
                 
@@ -85,7 +82,6 @@ class GraphEmailService:
         """Count emails per category from existing emails"""
         category_counts = {}
         
-        # Count emails per category
         for email in emails:
             email_categories = email.get('categories', [])
             for category in email_categories:

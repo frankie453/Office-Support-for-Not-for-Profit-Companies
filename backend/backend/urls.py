@@ -24,7 +24,9 @@ from api.views import (
     get_emails,
     ReportsEmailsView,
     generate_monthly_report,
-    get_email_reports
+    get_email_reports,
+    ReportsCallsView,
+    ReportsVisitsView
 )
 from rest_framework import routers
 
@@ -33,6 +35,8 @@ router.register(r'form/visits', InPersonVisitViewSet)
 router.register(r'form/calls', PhoneCallViewSet)
 router.register(r"categories", CategoryView)
 router.register(r"reports/emails", ReportsEmailsView)
+router.register(r"reports/calls", ReportsCallsView)
+router.register(r"reports/visits", ReportsVisitsView)
 
 urlpatterns = [
     path('api/generate-monthly-report/', generate_monthly_report, name='generate_monthly_report'),
