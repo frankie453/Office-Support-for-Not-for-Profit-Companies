@@ -4,13 +4,13 @@ from django.views import View
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import routers, serializers, viewsets, views
 from django.contrib.auth.models import User
-from .serializers import UserSerializer, CategorySerializer, ReportsCallsSerializer
+from .serializers import UserSerializer, CategorySerializer, ReportsCallsSerializer, ReportsVisitsSerializer
 from .models import Category
 from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from .models import InPersonVisitForm, PhoneCallForm, ReportsCalls
+from .models import InPersonVisitForm, PhoneCallForm, ReportsCalls, ReportsVisits
 from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer
 import platform
 from rest_framework.decorators import api_view
@@ -60,7 +60,16 @@ class LogoutView(viewsets.ViewSet):
 class InPersonVisitViewSet(viewsets.ModelViewSet):
     queryset = InPersonVisitForm.objects.all()
     serializer_class = InPersonVisitFormSerializer
+    def create(self, request, *args, **kwargs):
+        visit_date = datetime.strptime(request.data["date"], "%Y-%m-%d")
+        report_date = datetime(visit_date.year, visit_date.month, 1)
+        report, created = ReportsVisits.objects.get_or_create(
+            starting_month_year=report_date
+        )
 
+        request.data["report"] = report.id 
+
+        return super().create(request, *args, **kwargs)    
 
 class PhoneCallViewSet(viewsets.ModelViewSet):
     queryset = PhoneCallForm.objects.all()
@@ -104,6 +113,17 @@ class ReportsCallsView(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return Response(status=403)
 
+class ReportsVisitsView(viewsets.ModelViewSet):
+    serializer_class = ReportsVisitsSerializer
+    queryset = ReportsVisits.objects.all()
+    def create(self, request, *args, **kwargs):
+        return Response(status=403)
+
+    def update(self, request, *args, **kwargs):
+        return Response(status=403)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(status=403)
 
 @api_view(["GET"])
 def get_emails(request):

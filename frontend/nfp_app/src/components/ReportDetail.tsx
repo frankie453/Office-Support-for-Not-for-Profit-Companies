@@ -3,6 +3,7 @@ import {
   Report,
   ReportContentCalls,
   ReportContentEmails,
+  ReportContentVisits,
   ReportType,
 } from "../types";
 import { BarChart, LineChart, PieChart } from "@mui/x-charts";
@@ -77,103 +78,59 @@ export function ReportDetail({
             />
           </>
         )}
-        {/* <Typography fontWeight={"bold"} variant="h3">
-          {title}
-        </Typography>
-        <Typography variant="h4">Incoming</Typography>
-        <Typography variant="h6">
-          {"Total this month: " + report.content.incoming.total}
-        </Typography>
-        <Typography variant="h6">
-          {"Per Day: " +
-            Math.round(
-              report.content.incoming.total /
-                daysInMonth(
-                  report.metadata.date.getMonth(),
-                  report.metadata.date.getFullYear()
-                )
-            )}
-        </Typography>
-        <Typography style={{ textDecoration: "underline" }}>
-          Per Week
-        </Typography>
-
-        <LineChart
-          xAxis={[
-            {
-              data: report.content.incoming.byWeek.map((value, i) => i + 1),
-            },
-          ]}
-          series={[
-            {
-              data: report.content.incoming.byWeek,
-            },
-          ]}
-          width={500}
-          height={300}
-        />
-        <Typography style={{ textDecoration: "underline" }}>
-          By Category
-        </Typography>
-        <PieChart
-          series={[
-            {
-              data: report.content.incoming.byCategory,
-            },
-          ]}
-          width={400}
-          height={200}
-        />
-        {[ReportType.CALLS, ReportType.EMAILS].includes(
-          report.metadata.type
-        ) && (
+        {report.metadata.type === ReportType.INPERSON && (
           <>
-            <Typography variant="h3">Outcoming</Typography>
             <Typography variant="h6">
-              {"Total this month: " + outcoming.total}
-            </Typography>
-            <Typography variant="h6">
-              {"Per Day: " +
-                Math.round(
-                  outcoming.total /
-                    daysInMonth(
-                      report.metadata.date.getMonth(),
-                      report.metadata.date.getFullYear()
-                    )
-                )}
+              {"Total Visits this month: " +
+                (report.content as ReportContentVisits).total}
             </Typography>
             <Typography style={{ textDecoration: "underline" }}>
-              Per Week
+              Per Day
             </Typography>
-
             <LineChart
               xAxis={[
                 {
-                  data: outcoming.byWeek.map((value, i) => i + 1),
+                  data: (report.content as ReportContentVisits).byDay.map(
+                    (value, i) => i + 1
+                  ),
+                  min: 1,
+                  max: (report.content as ReportContentVisits).byDay.length,
                 },
               ]}
               series={[
                 {
-                  data: outcoming.byWeek,
+                  data: (report.content as ReportContentVisits).byDay,
                 },
               ]}
               width={500}
               height={300}
             />
             <Typography style={{ textDecoration: "underline" }}>
-              By Category
+              By Purpose
             </Typography>
             <PieChart
               series={[
                 {
-                  data: outcoming.byCategory,
+                  data: (report.content as ReportContentVisits).byPurpose,
+                },
+              ]}
+              width={400}
+              height={200}
+            />
+            <Typography style={{ textDecoration: "underline" }}>
+              By Employee
+            </Typography>
+            <PieChart
+              series={[
+                {
+                  data: (report.content as ReportContentVisits).byEmployee,
                 },
               ]}
               width={400}
               height={200}
             />
           </>
-        )} */}
+        )}
       </Stack>
     </Paper>
   );
