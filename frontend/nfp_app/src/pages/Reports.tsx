@@ -91,12 +91,68 @@ export default function ReportsPage() {
       byEmployee: byEmployee,
     };
   };
+  const getVisitsData = (date: Date, forms: any[]) => {
+    const total: number = forms.length;
+    const byDay: number[] = Array(daysInMonth(date)).fill(0);
+    const byPurpose: { label: string; value: number }[] = [];
+    const byEmployee: { label: string; value: number }[] = [];
+  
+    for (let i = 0; i < forms.length; i++) {
+      const form_date = new Date(forms[i].date.replace("-", "/"));
+      byDay[form_date.getDate() - 1] = byDay[form_date.getDate() - 1] + 1;
+  
+      if (forms[i].visitPurpose) {
+        const purposeIndex = byPurpose.findIndex(
+          (entry) => entry.label === forms[i].visitPurpose.toUpperCase()
+        );
+        if (purposeIndex === -1) {
+          byPurpose.push({ label: forms[i].visitPurpose.toUpperCase(), value: 1 });
+        } else {
+          byPurpose[purposeIndex] = {
+            label: forms[i].visitPurpose.toUpperCase(),
+            value: byPurpose[purposeIndex].value + 1,
+          };
+        }
+      }
+  
+      if (forms[i].taskTransferredTo) {
+        const employeeIndex = byEmployee.findIndex(
+          (entry) => entry.label === forms[i].taskTransferredTo.toUpperCase()
+        );
+        if (employeeIndex === -1) {
+          byEmployee.push({
+            label: forms[i].taskTransferredTo.toUpperCase(),
+            value: 1,
+          });
+        } else {
+          byEmployee[employeeIndex] = {
+            label: forms[i].taskTransferredTo.toUpperCase(),
+            value: byEmployee[employeeIndex].value + 1,
+          };
+        }
+      }
+    }
+  
+    return {
+      total: total,
+      byDay: byDay,
+      byPurpose: byPurpose,
+      byEmployee: byEmployee,
+    };
+  };
+   
   useEffect(() => {
-    axios
-      .get(BASE_URL + "api/reports/calls/")
-      .then((res) => {
-        const data = res.data;
-        const calls_reports: Report[] = data.map((entry: any) => {
+    Promise.all([
+      //fetch calls and visits report
+      axios.get(BASE_URL + "api/reports/calls/"),
+      axios.get(BASE_URL + "api/reports/visits/"),
+    ])
+      .then(([callsRes, visitsRes]) => {
+        const callsData = callsRes.data;
+        const visitsData = visitsRes.data;
+
+        //process calls reports
+        const callsReports: Report[] = callsData.map((entry: any) => {
           const report_date = new Date(
             entry.starting_month_year.replace("-", "/")
           );
@@ -109,8 +165,22 @@ export default function ReportsPage() {
             content: getCallsData(report_date, entry.forms),
           };
         });
-        setReports(calls_reports);
-        console.log(calls_reports);
+
+        // process visits reports
+        const visitsReports: Report[] = visitsData.map((entry: any) => {
+          const reportDate = new Date(entry.starting_month_year.replace("-", "/"));
+          return {
+            metadata: {
+              id: Number(entry.id),
+              date: reportDate,
+              type: ReportType.INPERSON,
+            },
+            content: getVisitsData(reportDate, entry.forms),
+          };
+        });        
+
+        setReports([...callsReports, ...visitsReports]); 
+        console.log(callsReports);
       })
 
       .catch((er) => {
