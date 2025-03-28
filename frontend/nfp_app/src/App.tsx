@@ -14,6 +14,7 @@ import InPersonForm from "./pages/InPersonForm";
 
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { loginRequest } from "./authConfig";
+import Reports from "./pages/Reports";
 
 function App() {
   const isAuthenticated = useIsAuthenticated();
@@ -50,7 +51,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="reports" element={<ReportsPage />} />
+            <Route path="reports" element={<Reports />} />
             <Route path="categories" element={<Categories />} />
             <Route path="tasks" element={<TaskPage />} />
             <Route path="phonecallform" element={<PhoneCallForm />} />

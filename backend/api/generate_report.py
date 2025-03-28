@@ -1,32 +1,3 @@
-import requests
-import time
-import datetime
-from collections import Counter, defaultdict
-
-FORMS_VISIT_ENDPOINT = "http://127.0.0.1:8000/api/form/visits/"
-
-
-def retrieve_data():
-    response = requests.get(FORMS_VISIT_ENDPOINT)
-    if response.status_code != 200:
-        return f"Error: {response.status_code}"
-    
-    forms = response.json()
-
-    visits_per_month = Counter()
-    visits_per_week = Counter()
-    visits_per_category = Counter()
-
-
-    # filter per month
-    for form in forms:
-        visit_date = datetime.datetime.strptime(form["date"], "%Y-%m-%d")
-        year_month = visit_date.strftime("%Y-%m") # target period
-        year_week = visit_date.strftime("%Y-%W")
-
-        visits_per_month[year_month] += 1
-        visits_per_week[year_week] += 1
-        visits_per_category[form["visitPurpose"]] += 1
 
 import requests
 import datetime

@@ -42,7 +42,6 @@ class GraphEmailService:
         }
         
         try:
-            print(f"Fetching emails with filter: {filter_query}")  # Debug print
             response = requests.get(
                 self.BASE_URL,
                 params=params,
@@ -53,17 +52,11 @@ class GraphEmailService:
             data = response.json()
             emails = data.get('value', [])
             
-            print(f"API Response: {response.status_code}")
-            print(f"Found {len(emails)} emails")
-            
-            # Cache the results
             cache.set(cache_key, emails, self.CACHE_TTL)
             
             return emails
             
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching emails: {str(e)}")
-            print(f"Response content: {e.response.content if hasattr(e, 'response') else 'No response'}")
             return []
 
     def group_by_week(self, emails: List[Dict]) -> List[int]:
@@ -92,5 +85,14 @@ class GraphEmailService:
             for category, count in category_counts.items()
             if count > 0
         ]
+
+    def group_by_day(self, emails):
+        days = [0] * 31  # Initialize array for days 1-31
+        for email in emails:
+            day = email.get('receivedDateTime', '')[:10]  # Get YYYY-MM-DD
+            if day:
+                day_num = int(day.split('-')[2])  # Get day number
+                days[day_num - 1] += 1
+        return days
   
         

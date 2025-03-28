@@ -130,13 +130,13 @@ class ReportsEmailsView(viewsets.ModelViewSet):
     queryset = ReportsEmails.objects.all()
 
     def create(self, request, *args, **kwargs):
-        return Response(status=403)  # Prevent direct creation through this view
+        return Response(status=403)  
 
     def update(self, request, *args, **kwargs):
-        return Response(status=403)  # Prevent updates
+        return Response(status=403) 
 
     def destroy(self, request, *args, **kwargs):
-        return Response(status=403)  # Prevent deletion
+        return Response(status=403)  
 
 @api_view(["GET"])
 def get_emails(request):
@@ -144,8 +144,6 @@ def get_emails(request):
         category = request.GET.get("category")
         token = request.headers.get("Authorization")
 
-        print(f"Category: {category}")
-        print(f"Token: {token}")
 
         if not token:
             return Response({"error": "No authorization token"}, status=401)
@@ -200,9 +198,8 @@ def login(request):
 
     return Response({"status": "authenticated"})
 
-@api_view(['GET', 'POST'])  # Allow both GET and POST
+@api_view(['GET', 'POST'])
 def generate_monthly_report(request):
-    print(f"Received {request.method} request with data:", request.data)  # Debug print
     if request.method == 'GET':
         return Response({'message': 'Use POST to generate report'})
         
@@ -213,11 +210,9 @@ def generate_monthly_report(request):
 
         service = GraphEmailService()
         
-        # Get mode and date range from request
         mode = request.data.get('mode', 'month')
         date_range = request.data.get('dateRange')
 
-        # Set date range based on mode
         if mode == 'month':
             today = datetime.now()
             start_date = datetime(today.year, today.month, 1)
@@ -235,8 +230,6 @@ def generate_monthly_report(request):
         incoming_emails = service.fetch_emails_by_date_range(token, start_date, end_date, incoming_filter)
         outgoing_emails = service.fetch_emails_by_date_range(token, start_date, end_date, outgoing_filter)
 
-        print(f"Found {len(incoming_emails)} incoming and {len(outgoing_emails)} outgoing emails")
-
         report = ReportsEmails.objects.create(
             metadata={
                 'id': ReportsEmails.objects.count() + 1,
@@ -247,11 +240,13 @@ def generate_monthly_report(request):
                 'incoming': {
                     'total': len(incoming_emails),
                     'byWeek': service.group_by_week(incoming_emails),
+                    'byDay': service.group_by_day(incoming_emails),
                     'byCategory': service.group_by_category(incoming_emails, token)
                 },
                 'outcoming': {
                     'total': len(outgoing_emails),
                     'byWeek': service.group_by_week(outgoing_emails),
+                    'byDay': service.group_by_day(outgoing_emails),
                     'byCategory': service.group_by_category(outgoing_emails, token)
                 }
             }
@@ -267,19 +262,15 @@ def generate_monthly_report(request):
         })
 
     except Exception as e:
-        print(f"Error generating report: {str(e)}")
         return Response({'error': str(e)}, status=500)
 
 
 @api_view(['GET'])
 def get_email_reports(request):
     try:
-        print("Fetching email reports...")
         reports = ReportsEmails.objects.all().order_by('-created_at')
         serializer = ReportsEmailsSerializer(reports, many=True)
         data = serializer.data
-        print("Returning reports:", data)
         return Response(data)
     except Exception as e:
-        print(f"Error in get_email_reports: {str(e)}")
         return Response({'error': str(e)}, status=500)

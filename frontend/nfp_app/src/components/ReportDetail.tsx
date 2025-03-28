@@ -37,21 +37,24 @@ export function ReportDetail({
               </Typography>
             )}
             <Typography style={{ textDecoration: "underline" }}>
-              Weekly Trends
+              Daily Trends
             </Typography>
             <LineChart
               xAxis={[{
-                data: [1, 2, 3, 4],
+                data: (report.content as ReportContentEmails).incoming.byDay.map(
+                  (value, i) => i + 1
+                ),
                 min: 1,
-                max: 4,
+                max: (report.content as ReportContentEmails).incoming.byDay.length,
+      
               }]}
               series={[
                 {
-                  data: (report.content as ReportContentEmails).incoming.byWeek,
+                  data: (report.content as ReportContentEmails).incoming.byDay,
                   label: 'Incoming'
                 },
                 {
-                  data: (report.content as ReportContentEmails).outcoming?.byWeek || [],
+                  data: (report.content as ReportContentEmails).outcoming.byDay,
                   label: 'Outgoing'
                 }
               ]}
@@ -62,12 +65,10 @@ export function ReportDetail({
               By Category
             </Typography>
             <PieChart
-              series={[
-                {
-                  data: (report.content as ReportContentEmails).incoming.byCategory
-                }
-              ]}
-              width={400}
+              series={[{
+                data: (report.content as ReportContentEmails).incoming.byCategory
+              }]}
+              width={500}
               height={200}
             />
           </>

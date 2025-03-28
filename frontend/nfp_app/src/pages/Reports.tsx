@@ -14,21 +14,21 @@ import {
   TextField,
   Toolbar,
   Typography,
-  CircularProgress,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { ReportGridIcon } from "../components/ReportGridIcon";
+import { reportsExamples } from "../reports_examples";
 import { useEffect, useState } from "react";
 import { ReportType, Report } from "../types";
 import { Dayjs } from "dayjs";
 import { Link, NavLink } from "react-router";
-import { ReportGenerator } from "../components/ReportGenerator";
-import { getEmailReports } from '../services/reportService';
-import { useMsal } from "@azure/msal-react";
 import axios from "axios";
 import { BASE_URL } from "../constants";
+import { useMsal } from "@azure/msal-react";
+import { getEmailReports } from "../services/reportService";
+import { ReportGenerator } from "../components/ReportGenerator";
 
 type ReportFilter = {
   type: ReportType | string;
@@ -158,39 +158,64 @@ export default function ReportsPage() {
       getEmailReports(instance)
     ])
       .then(([callsRes, visitsRes, emailsRes]) => {
-        const callsReports = callsRes.data.map((entry: any) => ({
-          metadata: {
-            id: Number(entry.id),
-            date: new Date(entry.starting_month_year.replace("-", "/")),
-            type: ReportType.CALLS,
-          },
-          content: getCallsData(new Date(entry.starting_month_year), entry.forms),
-        }));
+        const callsData = callsRes.data;
+        const visitsData = visitsRes.data;
 
-        const visitsReports = visitsRes.data.map((entry: any) => ({
-          metadata: {
-            id: Number(entry.id),
-            date: new Date(entry.starting_month_year.replace("-", "/")),
-            type: ReportType.INPERSON,
-          },
-          content: getVisitsData(new Date(entry.starting_month_year), entry.forms),
-        }));
+        //process calls reports
+        const callsReports: Report[] = callsData.map((entry: any) => {
+          const report_date = new Date(entry.starting_month_year.replace("-", "/"));
+          return {
+            metadata: {
+              id: Number(entry.id),
+              date: report_date,
+              type: ReportType.CALLS
+            },
+            content: getCallsData(report_date, entry.forms)
+          }
+        });
 
-        const emailReports = emailsRes.map((report: any) => ({
-          metadata: {
-            id: report.metadata.id,
-            date: new Date(report.metadata.date),
-            type: ReportType.EMAILS,
-          },
-          content: report.content
-        }));
+        // process visits reports
+        const visitsReports: Report[] = visitsData.map((entry: any) => {
+          const reportDate = new Date(entry.starting_month_year.replace("-", "/"));
+          return {
+            metadata: {
+              id: Number(entry.id),
+              date: reportDate,
+              type: ReportType.INPERSON,
+            },
+            content: getVisitsData(reportDate, entry.forms),
+          };
+        });
 
+        // process email reports
+        const emailReports: Report[] = emailsRes.map((report: any) => {
+          console.log("Processing email report:", {
+            raw: report,
+            metadata: report.metadata,
+            content: report.content
+          });
+          
+          const processedReport = {
+            metadata: {
+              id: report.metadata.id,
+              date: new Date(report.metadata.date),
+              type: ReportType.EMAILS,
+            },
+            content: report.content
+          };
+        
+          return processedReport;
+        });
+
+       
+
+        // Combine all reports
         setReports([...callsReports, ...visitsReports, ...emailReports]);
       })
-      .catch((err) => {
-        setError(err.message);
+      .catch((error) => {
+        setError(error.message);
       });
-  }, []);
+  }, [instance]);
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" sx={{ mb: 3}}>
@@ -264,7 +289,6 @@ export default function ReportsPage() {
           container
           columns={4}
           spacing={4}
-          // justifyContent="space-evenly"
           width={"100%"}
         >
           {reports
