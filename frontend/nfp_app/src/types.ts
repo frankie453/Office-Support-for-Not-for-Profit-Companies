@@ -18,14 +18,15 @@ export type ReportContentEmails = {
   incoming: {
     total: number;
     byWeek: number[];
-    byDay: number[];
     byCategory: { label: string; value: number }[];
+    byDay: number[];
   };
+
   outcoming: {
     total: number;
     byWeek: number[];
-    byDay: number[];
     byCategory: { label: string; value: number }[];
+    byDay: number[];
   };
 };
 
@@ -37,7 +38,7 @@ export type ReportContentVisits = {
 };
 
 export enum ReportType {
-  CALLS = "CALLS",
-  EMAILS = "EMAILS",
-  INPERSON = "INPERSON",
+  CALLS,
+  EMAILS,
+  INPERSON,
 }

@@ -41,12 +41,10 @@ export function ReportDetail({
             </Typography>
             <LineChart
               xAxis={[{
-                data: (report.content as ReportContentEmails).incoming.byDay.map(
-                  (value, i) => i + 1
-                ),
+                data: Array.from({length: 31}, (_, i) => i + 1),  // Generate 1-31 days
                 min: 1,
-                max: (report.content as ReportContentEmails).incoming.byDay.length,
-      
+                max: 31,
+                label: 'Day of Month'
               }]}
               series={[
                 {
