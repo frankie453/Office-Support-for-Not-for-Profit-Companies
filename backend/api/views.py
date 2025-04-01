@@ -10,14 +10,14 @@ from django.contrib.auth import login, logout
 from knox.views import LoginView as KnoxLoginView
 from django.http import HttpResponse, JsonResponse
 from rest_framework.authtoken.serializers import AuthTokenSerializer
-from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer, TaskSerializer
+from .serializers import InPersonVisitFormSerializer, PhoneCallFormSerializer, TaskSerializer, TaskSerializer
 import platform
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
 from .models import Task
 from services.graph_service import GraphEmailService
-
+import json
 
 def home(request):
     return JsonResponse({"message": "Hello from Django!"})

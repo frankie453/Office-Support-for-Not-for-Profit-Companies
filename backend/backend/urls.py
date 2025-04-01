@@ -16,6 +16,7 @@ from rest_framework import routers
 from api.views import CategoryView
 from api.views import get_emails
 from api.views import TaskView  
+from api.views import TaskView  
 
 router = routers.DefaultRouter()
 router.register(r'form/visits', InPersonVisitViewSet)
