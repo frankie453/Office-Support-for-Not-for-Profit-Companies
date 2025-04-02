@@ -23,6 +23,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from "@mui/icons-material/Edit";
 import axios from "axios";
 import { BASE_URL } from "../constants";
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -100,18 +101,26 @@ export default function TaskPage() {
         inProgress: [],
         done: []
     });
+    
+    // New state for edit mode
+    const [editMode, setEditMode] = useState(false);
+    const [editedTask, setEditedTask] = useState({ title: "", details: "" });
 
     const handleOpenTaskDetails = (task: Task) => {
         // Only open task details if not in delete mode
         if (!deleteMode[task.status]) {
             setSelectedTask(task);
             setTaskDetailsDialogOpen(true);
+            setEditMode(false);
+            // Reset edited task whenever a new task is selected
+            setEditedTask({ title: task.title, details: task.details });
         }
     };
 
     const handleCloseTaskDetails = () => {
         setTaskDetailsDialogOpen(false);
         setSelectedTask(null);
+        setEditMode(false);
     };
 
     const handleOpenNewTaskDialog = (section: string) => {
@@ -190,6 +199,48 @@ export default function TaskPage() {
         })
         .catch((error) => {
             console.error("Error updating task status:", error);
+        });
+    };
+
+    // New function to handle saving edited task
+    const handleSaveTask = () => {
+        if (!selectedTask || editedTask.title.trim() === "") return;
+        
+        axios.patch(BASE_URL + `api/tasks/${selectedTask.id}/`, {
+            title: editedTask.title,
+            details: editedTask.details
+        })
+        .then(() => {
+            // Update the frontend state
+            setTasks((currentTasks) => {
+                const updatedTasks = { ...currentTasks };
+                const taskIndex = updatedTasks[selectedTask.status].findIndex(
+                    (task) => task.id === selectedTask.id
+                );
+                
+                if (taskIndex !== -1) {
+                    updatedTasks[selectedTask.status][taskIndex] = {
+                        ...updatedTasks[selectedTask.status][taskIndex],
+                        title: editedTask.title,
+                        details: editedTask.details
+                    };
+                }
+                
+                return updatedTasks;
+            });
+            
+            // Update the selected task state
+            setSelectedTask({
+                ...selectedTask,
+                title: editedTask.title,
+                details: editedTask.details
+            });
+            
+            // Exit edit mode
+            setEditMode(false);
+        })
+        .catch((error) => {
+            console.error("Error updating task:", error);
         });
     };
 
@@ -341,25 +392,76 @@ export default function TaskPage() {
                     </Box>
                 </DndProvider>
 
-                {/* Task Details Dialog */}
+                {/* Task Details Dialog with Edit capability */}
                 <Dialog open={taskDetailsDialogOpen} onClose={handleCloseTaskDetails}>
-                    <DialogTitle>Task Details</DialogTitle>
+                    <DialogTitle>
+                        {editMode ? "Edit Task" : "Task Details"}
+                    </DialogTitle>
                     <DialogContent>
                         {selectedTask && (
-                            <Box sx={{ p: 2 }}>
-                                <Typography variant="h6">{selectedTask.title}</Typography>
-                                <Typography variant="body1" sx={{ mt: 2 }}>
-                                    {selectedTask.details}
-                                </Typography>
-                                <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
-                                    Status: {selectedTask.status === 'todo' ? 'To Do' : 
-                                            selectedTask.status === 'inProgress' ? 'In Progress' : 'Done'}
-                                </Typography>
+                            <Box sx={{ p: 2, minWidth: "300px" }}>
+                                {!editMode ? (
+                                    <>
+                                        <Typography variant="h6">{selectedTask.title}</Typography>
+                                        <Typography variant="body1" sx={{ mt: 2 }}>
+                                            {selectedTask.details}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                            Status: {selectedTask.status === 'todo' ? 'To Do' : 
+                                                    selectedTask.status === 'inProgress' ? 'In Progress' : 'Done'}
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TextField
+                                            label="Task Title"
+                                            fullWidth
+                                            margin="normal"
+                                            value={editedTask.title}
+                                            onChange={(e) => setEditedTask(prev => ({ ...prev, title: e.target.value }))}
+                                        />
+                                        <TextField
+                                            label="Task Details"
+                                            fullWidth
+                                            margin="normal"
+                                            multiline
+                                            rows={4}
+                                            value={editedTask.details}
+                                            onChange={(e) => setEditedTask(prev => ({ ...prev, details: e.target.value }))}
+                                        />
+                                        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                            Status: {selectedTask.status === 'todo' ? 'To Do' : 
+                                                    selectedTask.status === 'inProgress' ? 'In Progress' : 'Done'}
+                                        </Typography>
+                                    </>
+                                )}
                             </Box>
                         )}
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseTaskDetails}>Close</Button>
+                        {!editMode ? (
+                            <>
+                                <Button 
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setEditMode(true)}
+                                    color="primary"
+                                >
+                                    Edit
+                                </Button>
+                                <Button onClick={handleCloseTaskDetails}>Close</Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button onClick={() => setEditMode(false)}>Cancel</Button>
+                                <Button 
+                                    variant="contained" 
+                                    onClick={handleSaveTask}
+                                    disabled={editedTask.title.trim() === ""}
+                                >
+                                    Save
+                                </Button>
+                            </>
+                        )}
                     </DialogActions>
                 </Dialog>
 

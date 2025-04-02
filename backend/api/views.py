@@ -16,7 +16,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 import requests
 from .models import Task
-from services.graph_service import GraphEmailService
+from api.services.graph_service import GraphEmailService
 import json
 
 def home(request):
