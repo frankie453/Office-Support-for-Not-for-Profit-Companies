@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react"; 
 import {
     Box,
     Typography,
@@ -15,45 +15,112 @@ import {
     Button,
     InputAdornment,
     Checkbox,
+    Paper,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
+import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from "@mui/icons-material/Edit";
+import axios from "axios";
+import { BASE_URL } from "../constants";
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { getEmptyImage } from 'react-dnd-html5-backend';
+
+// Define item types for drag and drop
+const ItemTypes = {
+  TASK: 'task'
+};
 
 export default function TaskPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [tasks, setTasks] = useState<Record<string, Task[]>>({
         todo: [
-            { primary: "Visit client", secondary: "John Doe", status: "todo" },
-            { primary: "Prepare meeting", secondary: "Alice Smith", status: "todo" },
+            { id: "1", title: "Visit client", details: "John Doe", status: "todo" },
+            { id: "2", title: "Prepare meeting", details: "Alice Smith", status: "todo" },
         ],
         inProgress: [
-            { primary: "Call client", secondary: "Jane Doe", status: "inProgress" },
-            { primary: "Draft proposal", secondary: "Bob Johnson", status: "inProgress" },
+            { id: "3", title: "Call client", details: "Jane Doe", status: "inProgress" },
+            { id: "4", title: "Draft proposal", details: "Bob Johnson", status: "inProgress" },
         ],
         done: [
-            { primary: "Send email to client", secondary: "Will Smith", status: "done" },
-            { primary: "Complete report", secondary: "Chris Evans", status: "done" },
+            { id: "5", title: "Send email to client", details: "Will Smith", status: "done" },
+            { id: "6", title: "Complete report", details: "Chris Evans", status: "done" },
         ],
     });
+    
+    // Key for forcing component re-mount
+    const [dndKey, setDndKey] = useState(0);
 
-    const [dialogOpen, setDialogOpen] = useState(false);
+    // State to track if delete mode is active for each section
+    const [deleteMode, setDeleteMode] = useState<Record<string, boolean>>({
+        todo: false,
+        inProgress: false,
+        done: false
+    });
+
+    useEffect(() => {
+        const fetchTasks = async () => {
+            try {
+                const response = await axios.get(BASE_URL + "api/tasks/");
+                const fetchedTasks = response.data;
+                
+                // Organize tasks by status
+                const organizedTasks: Record<string, Task[]> = {
+                    todo: [],
+                    inProgress: [],
+                    done: []
+                };
+
+                // Sort tasks into their respective status categories
+                fetchedTasks.forEach((task: Task) => {
+                    if (organizedTasks[task.status]) {
+                        organizedTasks[task.status].push(task);
+                    }
+                });
+
+                setTasks(organizedTasks);
+            } catch (error) {
+                console.error("Error fetching tasks:", error);
+            }
+        };
+
+        fetchTasks();
+    }, []); 
+
     const [newTaskDialogOpen, setNewTaskDialogOpen] = useState(false);
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [editTask, setEditTask] = useState<Task | null>(null);
+    const [taskDetailsDialogOpen, setTaskDetailsDialogOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [currentSection, setCurrentSection] = useState<string>("");
-    const [newTask, setNewTask] = useState({ primary: "", secondary: "" });
-    const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+    const [newTask, setNewTask] = useState({ title: "", details: "" });
+    const [selectedTasks, setSelectedTasks] = useState<Record<string, string[]>>({
+        todo: [],
+        inProgress: [],
+        done: []
+    });
+    
+    // New state for edit mode
+    const [editMode, setEditMode] = useState(false);
+    const [editedTask, setEditedTask] = useState({ title: "", details: "" });
 
-    const handleOpenDialog = (task: Task) => {
-        setEditTask(task);
-        setDialogOpen(true);
+    const handleOpenTaskDetails = (task: Task) => {
+        // Only open task details if not in delete mode
+        if (!deleteMode[task.status]) {
+            setSelectedTask(task);
+            setTaskDetailsDialogOpen(true);
+            setEditMode(false);
+            // Reset edited task whenever a new task is selected
+            setEditedTask({ title: task.title, details: task.details });
+        }
     };
 
-    const handleCloseDialog = () => {
-        setDialogOpen(false);
-        setEditTask(null);
+    const handleCloseTaskDetails = () => {
+        setTaskDetailsDialogOpen(false);
+        setSelectedTask(null);
+        setEditMode(false);
     };
 
     const handleOpenNewTaskDialog = (section: string) => {
@@ -63,87 +130,194 @@ export default function TaskPage() {
 
     const handleCloseNewTaskDialog = () => {
         setNewTaskDialogOpen(false);
-        setNewTask({ primary: "", secondary: "" });
+        setNewTask({ title: "", details: "" });
     };
 
     const handleAddTask = () => {
-        if (newTask.primary.trim() !== "") {
-            setTasks((currentTasks) => ({
-                ...currentTasks,
-                [currentSection]: [
-                    ...currentTasks[currentSection],
-                    { ...newTask, status: currentSection },
-                ],
-            }));
-            handleCloseNewTaskDialog();
-        }
+        if (newTask.title.trim() === "") return;
+    
+        axios
+            .post(BASE_URL + "api/tasks/", {
+                title: newTask.title,
+                details: newTask.details,
+                status: currentSection,
+            })
+            .then((res) => {
+                // Create a properly structured task object
+                const formattedTask: Task = {
+                    id: res.data.id,
+                    title: newTask.title,
+                    details: newTask.details,
+                    status: currentSection
+                };
+                
+                setTasks((currentTasks) => {
+                    const updatedTasks = { ...currentTasks };
+                    updatedTasks[currentSection] = [
+                        ...updatedTasks[currentSection],
+                        formattedTask
+                    ];
+                    return updatedTasks;
+                });
+                
+                setNewTask({ title: "", details: "" });
+                setNewTaskDialogOpen(false);
+            })
+            .catch((error) => {
+                console.error("Error adding task:", error);
+            });
     };
+    
+    // Handle moving a task to a new status
+    const handleMoveTask = (taskId: string, oldStatus: string, newStatus: string) => {
+        if (oldStatus === newStatus) return;
 
-    const handleStatusChange = (newStatus: string) => {
-        if (editTask && editTask.status !== newStatus) {
+        // Find the task that's being moved
+        const taskToMove = tasks[oldStatus].find((task) => task.id === taskId);
+        if (!taskToMove) return;
+
+        // Update the backend
+        axios.patch(BASE_URL + `api/tasks/${taskId}/`, {
+            status: newStatus
+        })
+        .then(() => {
+            // Update the frontend state
             setTasks((currentTasks) => {
-                // Remove task from current section
                 const updatedTasks = { ...currentTasks };
-                updatedTasks[editTask.status] = updatedTasks[editTask.status].filter(
-                    (task) => task.primary !== editTask.primary
+                // Remove task from old section
+                updatedTasks[oldStatus] = updatedTasks[oldStatus].filter(
+                    (task) => task.id !== taskId
                 );
-                // Add task to new section
-                const taskCopy = { ...editTask, status: newStatus };
+                // Add task to new section with updated status
+                const taskCopy = { ...taskToMove, status: newStatus };
                 updatedTasks[newStatus] = [...updatedTasks[newStatus], taskCopy];
                 return updatedTasks;
             });
-            setEditTask({ ...editTask, status: newStatus });
+            
+            // Force DnD to re-initialize by changing the key
+            setDndKey(prevKey => prevKey + 1);
+        })
+        .catch((error) => {
+            console.error("Error updating task status:", error);
+        });
+    };
+
+    // New function to handle saving edited task
+    const handleSaveTask = () => {
+        if (!selectedTask || editedTask.title.trim() === "") return;
+        
+        axios.patch(BASE_URL + `api/tasks/${selectedTask.id}/`, {
+            title: editedTask.title,
+            details: editedTask.details
+        })
+        .then(() => {
+            // Update the frontend state
+            setTasks((currentTasks) => {
+                const updatedTasks = { ...currentTasks };
+                const taskIndex = updatedTasks[selectedTask.status].findIndex(
+                    (task) => task.id === selectedTask.id
+                );
+                
+                if (taskIndex !== -1) {
+                    updatedTasks[selectedTask.status][taskIndex] = {
+                        ...updatedTasks[selectedTask.status][taskIndex],
+                        title: editedTask.title,
+                        details: editedTask.details
+                    };
+                }
+                
+                return updatedTasks;
+            });
+            
+            // Update the selected task state
+            setSelectedTask({
+                ...selectedTask,
+                title: editedTask.title,
+                details: editedTask.details
+            });
+            
+            // Exit edit mode
+            setEditMode(false);
+        })
+        .catch((error) => {
+            console.error("Error updating task:", error);
+        });
+    };
+
+    // Toggle delete mode for a specific section
+    const toggleDeleteMode = (section: string) => {
+        setDeleteMode(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+        
+        // Clear selected tasks when toggling delete mode off
+        if (deleteMode[section]) {
+            setSelectedTasks(prev => ({
+                ...prev,
+                [section]: []
+            }));
         }
     };
 
-    const handleOpenDeleteDialog = (section: string) => {
-        setCurrentSection(section);
-        setDeleteDialogOpen(true);
-    };
-
-    const handleCloseDeleteDialog = () => {
-        setDeleteDialogOpen(false);
-        setSelectedTasks([]);
-    };
-
-    const handleToggleTask = (taskPrimary: string) => {
-        setSelectedTasks((currentSelected) => {
-            if (currentSelected.includes(taskPrimary)) {
-                return currentSelected.filter((primary) => primary !== taskPrimary);
+    // Handle toggling a task for deletion
+    const handleToggleTask = (taskId: string, section: string) => {
+        setSelectedTasks((prev) => {
+            const updated = { ...prev };
+            if (updated[section].includes(taskId)) {
+                updated[section] = updated[section].filter(id => id !== taskId);
             } else {
-                return [...currentSelected, taskPrimary];
+                updated[section] = [...updated[section], taskId];
             }
+            return updated;
         });
     };
 
-    const handleDeleteTasks = () => {
-        setTasks((currentTasks) => {
+    // Handle delete selected tasks
+    const handleDeleteTasks = (section: string) => {
+        const taskIdsToDelete = selectedTasks[section];
+    
+        Promise.all(
+          taskIdsToDelete.map((taskId) =>
+            axios.delete(BASE_URL + `api/tasks/${taskId}/`).catch((error) => {
+              console.error(`Error deleting task with id ${taskId}:`, error);
+            })
+          )
+        ).then(() => {
+          setTasks((currentTasks) => {
             const updatedTasks = { ...currentTasks };
-            updatedTasks[currentSection] = updatedTasks[currentSection].filter(
-                (task) => !selectedTasks.includes(task.primary)
+            updatedTasks[section] = updatedTasks[section].filter(
+              (task) => !selectedTasks[section].includes(task.id)
             );
             return updatedTasks;
+          });
+          
+          // Exit delete mode and clear selections
+          toggleDeleteMode(section);
+          
+          // Force DnD to re-initialize by changing the key
+          setDndKey(prevKey => prevKey + 1);
         });
-        handleCloseDeleteDialog();
-    };
-
-    const handleSaveTask = () => {
-       
-        handleCloseDialog();
     };
 
     const filteredTasks = {
-        todo: tasks.todo.filter((task) =>
-            task.primary.toLowerCase().includes(searchTerm.toLowerCase())
-        ),
-        inProgress: tasks.inProgress.filter((task) =>
-            task.primary.toLowerCase().includes(searchTerm.toLowerCase())
-        ),
-        done: tasks.done.filter((task) =>
-            task.primary.toLowerCase().includes(searchTerm.toLowerCase())
-        ),
+        todo: Array.isArray(tasks.todo)
+            ? tasks.todo.filter((task) =>
+                  task.title?.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : [],
+        inProgress: Array.isArray(tasks.inProgress)
+            ? tasks.inProgress.filter((task) =>
+                  task.title?.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : [],
+        done: Array.isArray(tasks.done)
+            ? tasks.done.filter((task) =>
+                  task.title?.toLowerCase().includes(searchTerm.toLowerCase())
+              )
+            : [],
     };
-
+    
     return (
         <>
             {/* Search bar */}
@@ -173,69 +347,125 @@ export default function TaskPage() {
                     />
                 </Box>
                 
-                {/* Task sections */}
+                {/* Task sections with DnD */}
+                <DndProvider backend={HTML5Backend} key={dndKey}>
+                    <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 2 }}>
+                        <TaskSection
+                            title="To Do"
+                            status="todo"
+                            tasks={filteredTasks.todo}
+                            onTaskClick={handleOpenTaskDetails}
+                            onAddTask={() => handleOpenNewTaskDialog("todo")}
+                            onDeleteModeToggle={() => toggleDeleteMode("todo")}
+                            onMoveTask={handleMoveTask}
+                            deleteMode={deleteMode.todo}
+                            selectedTasks={selectedTasks.todo}
+                            onToggleTask={handleToggleTask}
+                            onDeleteSelectedTasks={() => handleDeleteTasks("todo")}
+                        />
+                        <TaskSection
+                            title="In Progress"
+                            status="inProgress"
+                            tasks={filteredTasks.inProgress}
+                            onTaskClick={handleOpenTaskDetails}
+                            onAddTask={() => handleOpenNewTaskDialog("inProgress")}
+                            onDeleteModeToggle={() => toggleDeleteMode("inProgress")}
+                            onMoveTask={handleMoveTask}
+                            deleteMode={deleteMode.inProgress}
+                            selectedTasks={selectedTasks.inProgress}
+                            onToggleTask={handleToggleTask}
+                            onDeleteSelectedTasks={() => handleDeleteTasks("inProgress")}
+                        />
+                        <TaskSection
+                            title="Done"
+                            status="done"
+                            tasks={filteredTasks.done}
+                            onTaskClick={handleOpenTaskDetails}
+                            onAddTask={() => handleOpenNewTaskDialog("done")}
+                            onDeleteModeToggle={() => toggleDeleteMode("done")}
+                            onMoveTask={handleMoveTask}
+                            deleteMode={deleteMode.done}
+                            selectedTasks={selectedTasks.done}
+                            onToggleTask={handleToggleTask}
+                            onDeleteSelectedTasks={() => handleDeleteTasks("done")}
+                        />
+                    </Box>
+                </DndProvider>
 
-                <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between", gap: 2 }}>
-                    <TaskSection
-                        title="To Do"
-                        tasks={filteredTasks.todo}
-                        onTaskClick={handleOpenDialog}
-                        onAddTask={() => handleOpenNewTaskDialog("todo")}
-                        onDeleteTask={() => handleOpenDeleteDialog("todo")}
-                    />
-                    <TaskSection
-                        title="In Progress"
-                        tasks={filteredTasks.inProgress}
-                        onTaskClick={handleOpenDialog}
-                        onAddTask={() => handleOpenNewTaskDialog("inProgress")}
-                        onDeleteTask={() => handleOpenDeleteDialog("inProgress")}
-                    />
-                    <TaskSection
-                        title="Done"
-                        tasks={filteredTasks.done}
-                        onTaskClick={handleOpenDialog}
-                        onAddTask={() => handleOpenNewTaskDialog("done")}
-                        onDeleteTask={() => handleOpenDeleteDialog("done")}
-                    />
-                </Box>
-
-                {/* Edit Task Dialog */}
-
-                <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-                    <DialogTitle>Change task status</DialogTitle>
+                {/* Task Details Dialog with Edit capability */}
+                <Dialog open={taskDetailsDialogOpen} onClose={handleCloseTaskDetails}>
+                    <DialogTitle>
+                        {editMode ? "Edit Task" : "Task Details"}
+                    </DialogTitle>
                     <DialogContent>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={() => handleStatusChange("todo")}
-                            >
-                                To Do
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={() => handleStatusChange("inProgress")}
-                            >
-                                In Progress
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={() => handleStatusChange("done")}
-                            >
-                                Done
-                            </Button>
-                        </Box>
+                        {selectedTask && (
+                            <Box sx={{ p: 2, minWidth: "300px" }}>
+                                {!editMode ? (
+                                    <>
+                                        <Typography variant="h6">{selectedTask.title}</Typography>
+                                        <Typography variant="body1" sx={{ mt: 2 }}>
+                                            {selectedTask.details}
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                            Status: {selectedTask.status === 'todo' ? 'To Do' : 
+                                                    selectedTask.status === 'inProgress' ? 'In Progress' : 'Done'}
+                                        </Typography>
+                                    </>
+                                ) : (
+                                    <>
+                                        <TextField
+                                            label="Task Title"
+                                            fullWidth
+                                            margin="normal"
+                                            value={editedTask.title}
+                                            onChange={(e) => setEditedTask(prev => ({ ...prev, title: e.target.value }))}
+                                        />
+                                        <TextField
+                                            label="Task Details"
+                                            fullWidth
+                                            margin="normal"
+                                            multiline
+                                            rows={4}
+                                            value={editedTask.details}
+                                            onChange={(e) => setEditedTask(prev => ({ ...prev, details: e.target.value }))}
+                                        />
+                                        <Typography variant="body2" sx={{ mt: 2, color: 'text.secondary' }}>
+                                            Status: {selectedTask.status === 'todo' ? 'To Do' : 
+                                                    selectedTask.status === 'inProgress' ? 'In Progress' : 'Done'}
+                                        </Typography>
+                                    </>
+                                )}
+                            </Box>
+                        )}
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={handleCloseDialog}>Cancel</Button>
-                        <Button variant="contained" onClick={handleSaveTask}>Save</Button>
+                        {!editMode ? (
+                            <>
+                                <Button 
+                                    startIcon={<EditIcon />}
+                                    onClick={() => setEditMode(true)}
+                                    color="primary"
+                                >
+                                    Edit
+                                </Button>
+                                <Button onClick={handleCloseTaskDetails}>Close</Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button onClick={() => setEditMode(false)}>Cancel</Button>
+                                <Button 
+                                    variant="contained" 
+                                    onClick={handleSaveTask}
+                                    disabled={editedTask.title.trim() === ""}
+                                >
+                                    Save
+                                </Button>
+                            </>
+                        )}
                     </DialogActions>
                 </Dialog>
 
                 {/* New Task Dialog */}
-
                 <Dialog open={newTaskDialogOpen} onClose={handleCloseNewTaskDialog}>
                     <DialogTitle>Add New Task</DialogTitle>
                     <DialogContent>
@@ -243,18 +473,18 @@ export default function TaskPage() {
                             label="Task Name"
                             fullWidth
                             margin="normal"
-                            value={newTask.primary}
+                            value={newTask.title}
                             onChange={(e) =>
-                                setNewTask((prev) => ({ ...prev, primary: e.target.value }))
+                                setNewTask((prev) => ({ ...prev, title: e.target.value }))
                             }
                         />
                         <TextField
                             label="Task Details"
                             fullWidth
                             margin="normal"
-                            value={newTask.secondary}
+                            value={newTask.details}
                             onChange={(e) =>
-                                setNewTask((prev) => ({ ...prev, secondary: e.target.value }))
+                                setNewTask((prev) => ({ ...prev, details: e.target.value }))
                             }
                         />
                     </DialogContent>
@@ -263,75 +493,248 @@ export default function TaskPage() {
                         <Button variant="contained" onClick={handleAddTask}>Add Task</Button>
                     </DialogActions>
                 </Dialog>
-
-                {/* Delete Task Dialog */}
-
-                <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
-                    <DialogTitle>Delete Tasks</DialogTitle>
-                    <DialogContent>
-                        <List>
-                            {tasks[currentSection]?.map((task, index) => (
-                                <ListItem key={index} disablePadding>
-                                    <Checkbox
-                                        checked={selectedTasks.includes(task.primary)}
-                                        onChange={() => handleToggleTask(task.primary)}
-                                    />
-                                    <ListItemText primary={task.primary} />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-                        <Button variant="contained" color="error" onClick={handleDeleteTasks}>
-                            Delete
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
             </Box>
         </>
     );
 }
 
 interface Task {
-    primary: string;
-    secondary: string;
+    id: string;
+    title: string;
+    details: string;
     status: string;
 }
 
 interface TaskSectionProps {
     title: string;
+    status: string;
     tasks: Task[];
     onTaskClick: (task: Task) => void;
     onAddTask: () => void;
-    onDeleteTask: () => void;
+    onDeleteModeToggle: () => void;
+    onMoveTask: (taskId: string, oldStatus: string, newStatus: string) => void;
+    deleteMode: boolean;
+    selectedTasks: string[];
+    onToggleTask: (taskId: string, status: string) => void;
+    onDeleteSelectedTasks: () => void;
 }
 
-
-
-function TaskSection({ title, tasks, onTaskClick, onAddTask, onDeleteTask }: TaskSectionProps) {
+// Draggable Task Item Component
+function DraggableTaskItem({ 
+    task, 
+    onTaskClick, 
+    deleteMode, 
+    isSelected, 
+    onToggleTask 
+}: { 
+    task: Task; 
+    onTaskClick: (task: Task) => void;
+    deleteMode: boolean;
+    isSelected: boolean;
+    onToggleTask: (taskId: string, status: string) => void;
+}) {
+    const [{ isDragging }, drag] = useDrag({
+        type: ItemTypes.TASK,
+        item: { id: task.id, status: task.status, title: task.title },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+        canDrag: !deleteMode, // Disable dragging when in delete mode
+        end: (item, monitor) => {
+            if (!monitor.didDrop()) {
+                // Handle case when item was not dropped on a valid target
+                console.log("Task was not dropped on a valid target");
+            }
+        },
+    });
+    
     return (
-        <Box sx={{ flexGrow: 1, borderRadius: 1, bgcolor: "#F3EAF0", display: "flex", flexDirection: "column", padding: 2, ml: 2 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div 
+            ref={drag} 
+            style={{ 
+                opacity: isDragging ? 0.4 : 1,
+                cursor: deleteMode ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+                transform: isDragging ? 'scale(0.95)' : 'scale(1)',
+                transition: 'opacity 0.2s, transform 0.2s'
+            }}
+            data-testid={`task-${task.id}`}
+        >
+            <Paper 
+                elevation={2}
+                sx={{ 
+                    backgroundColor: isSelected ? "rgba(25, 118, 210, 0.08)" : "white", 
+                    borderRadius: "8px", 
+                    marginBottom: "8px",
+                    transition: "box-shadow 0.2s ease, background-color 0.2s ease",
+                    '&:hover': {
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.15)',
+                    },
+                    display: "flex",
+                    alignItems: "center"
+                }}
+            >
+                <ListItemButton 
+                    onClick={() => {
+                        if (deleteMode) {
+                            onToggleTask(task.id, task.status);
+                        } else if (!isDragging) {
+                            onTaskClick(task);
+                        }
+                    }}
+                    disabled={isDragging}
+                    sx={{ flexGrow: 1 }}
+                >
+                    <ListItemText 
+                        primary={task.title} 
+                        secondary={task.details}
+                        primaryTypographyProps={{
+                            style: { 
+                                fontWeight: 500,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }
+                        }}
+                    />
+                </ListItemButton>
+                
+                {deleteMode && (
+                    <Checkbox
+                        checked={isSelected}
+                        onChange={() => onToggleTask(task.id, task.status)}
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{ mr: 1 }}
+                    />
+                )}
+            </Paper>
+        </div>
+    );
+}
+
+function TaskSection({ 
+    title, 
+    status, 
+    tasks, 
+    onTaskClick, 
+    onAddTask, 
+    onDeleteModeToggle, 
+    onMoveTask,
+    deleteMode,
+    selectedTasks,
+    onToggleTask,
+    onDeleteSelectedTasks
+}: TaskSectionProps) {
+    // Set up drop target with proper accept type
+    const [{ isOver, canDrop }, drop] = useDrop({
+        accept: ItemTypes.TASK,
+        drop: (item: { id: string, status: string }) => {
+            onMoveTask(item.id, item.status, status);
+            return { dropped: true };
+        },
+        collect: (monitor) => ({
+            isOver: monitor.isOver(),
+            canDrop: monitor.canDrop(),
+        }),
+        canDrop: () => !deleteMode, // Disable dropping when in delete mode
+    });
+
+    // Calculate background color based on drag state
+    const backgroundColor = deleteMode 
+        ? "#FFF8E1" // Light yellow for delete mode
+        : isOver 
+            ? canDrop 
+                ? "#d0f0d0" // Green tint when can drop 
+                : "#ffe0e0" // Red tint when cannot drop
+            : "#F3EAF0"; // Default color
+
+    return (
+        <Box 
+            ref={drop}
+            sx={{ 
+                flexGrow: 1, 
+                borderRadius: 1, 
+                bgcolor: backgroundColor, 
+                display: "flex", 
+                flexDirection: "column", 
+                padding: 2, 
+                ml: 2,
+                transition: "background-color 0.3s ease",
+                height: "100%",
+                minHeight: "300px",
+                boxShadow: (isOver && canDrop) || deleteMode ? '0 0 8px rgba(0, 0, 0, 0.1)' : 'none',
+                border: isOver ? '2px dashed #999' : deleteMode ? '2px solid #FFA000' : '2px solid transparent'
+            }}
+            data-testid={`droppable-${status}`}
+        >
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h6" sx={{ fontSize: "30px", fontWeight: "bold" }}>{title} ({tasks.length})</Typography>
-                <Box>
-                    <IconButton onClick={onAddTask}>
-                        <AddCircleIcon fontSize="large" color="primary" />
-                    </IconButton>
-                    <IconButton onClick={onDeleteTask}>
-                        <DeleteIcon fontSize="large" color="error"/>
-                    </IconButton>
-                </Box>
+                
+                {!deleteMode ? (
+                    <Box>
+                        <IconButton onClick={onAddTask}>
+                            <AddCircleIcon fontSize="large" color="primary" />
+                        </IconButton>
+                        <IconButton onClick={onDeleteModeToggle}>
+                            <DeleteIcon fontSize="large" color="error"/>
+                        </IconButton>
+                    </Box>
+                ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Typography variant="body2" sx={{ mr: 1 }}>
+                            {selectedTasks.length} selected
+                        </Typography>
+                        <IconButton 
+                            color="success" 
+                            onClick={onDeleteSelectedTasks}
+                            disabled={selectedTasks.length === 0}
+                        >
+                            <CheckIcon />
+                        </IconButton>
+                        <IconButton color="default" onClick={onDeleteModeToggle}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                )}
             </Box>
-            <List>
-                {tasks.map((task, index) => (
-                    <ListItem key={index} disablePadding sx={{ backgroundColor: "white", borderRadius: "8px", marginBottom: "8px" }}>
-                        <ListItemButton onClick={() => onTaskClick(task)}>
-                            <ListItemText primary={task.primary} secondary={task.secondary} />
-                        </ListItemButton>
-                    </ListItem>
+            
+            {deleteMode && (
+                <Box sx={{ mb: 2, p: 1, bgcolor: 'rgba(0, 0, 0, 0.05)', borderRadius: 1 }}>
+                    <Typography variant="body2">
+                        Select tasks to delete
+                    </Typography>
+                </Box>
+            )}
+            
+            <List sx={{ 
+                flexGrow: 1, 
+                overflow: 'auto', 
+                backgroundColor: isOver && canDrop ? 'rgba(255, 255, 255, 0.6)' : 'transparent',
+                borderRadius: 1,
+                p: 1
+            }}>
+                {tasks.map((task) => (
+                    <DraggableTaskItem 
+                        key={task.id} 
+                        task={task} 
+                        onTaskClick={onTaskClick}
+                        deleteMode={deleteMode}
+                        isSelected={selectedTasks.includes(task.id)}
+                        onToggleTask={onToggleTask}
+                    />
                 ))}
+                {isOver && canDrop && tasks.length === 0 && (
+                    <Box sx={{ 
+                        height: '80px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        border: '1px dashed #aaa',
+                        borderRadius: '8px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                    }}>
+                        <Typography color="text.secondary">Drop task here</Typography>
+                    </Box>
+                )}
             </List>
         </Box>
     );
